@@ -24,6 +24,14 @@
       <h1 class="site-title">ISLA NUBLAR<br><span>RESEARCH LAB</span></h1>
       <p class="site-subtitle">QUIZ EXPEDITION — 校内周遊調査ミッション</p>
     </div>
+    <!-- ★★★ コンセプト表示エリア ★★★ -->
+    <div style="background: rgba(43,240,120,0.06); border: 1px solid var(--c-green-dim); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; text-align: left;">
+      <p style="margin: 0; font-size: 13px; color: var(--c-text); line-height: 1.7;">
+        <strong style="color: var(--c-amber);">📖 コンセプト</strong><br>
+        あなたたちは「イスラ・ヌブラル研究所」の特別調査チーム。校内に点在する展示エリア（区画）を巡り、脱走した恐竜の特定とセキュリティコードの解読を命じられた。<br>
+        全4区画の謎を解き、最終起動コードを入力して施設のロックダウンを解除せよ！
+      </p>
+    </div>
     <div class="registration-form">
       <label for="team-name-input" class="form-label">🔰 TEAM NAME を入力してください</label>
       <input type="text" id="team-name-input" class="form-input" placeholder="例：ラプトル探検隊" maxlength="20" autocomplete="off">
@@ -31,7 +39,7 @@
       <button id="btn-start-team" class="btn-primary btn-lg">
         <i class="fa-solid fa-play"></i> ミッション開始（フルスクリーン起動）
       </button>
-      <p class="registration-note">※ 開始すると画面が全画面表示になり、調査中の離脱は検知・記録されます。</p>
+      <p class="registration-note">※ 開始すると全画面表示になり、離脱は検知・記録されます。</p>
     </div>
   </div>
 </section>
@@ -41,22 +49,19 @@
      ============================================================ -->
 <section id="screen-dashboard" class="screen">
   <div class="dashboard-bg-grid"></div>
-
-  <!-- 最上部バー -->
   <header class="topbar">
     <div class="topbar-left">
       <span class="topbar-emblem">🦖</span>
       <span class="topbar-team">TEAM: <b id="team-name-display">---</b></span>
     </div>
     <div class="topbar-right">
-      <button id="btn-howto" class="btn-topbar"><i class="fa-solid fa-book-open"></i> 遊び方</button>
-      <button id="btn-notice" class="btn-topbar"><i class="fa-solid fa-triangle-exclamation"></i> 注意事項</button>
+      <button id="btn-concept" class="btn-topbar"><i class="fa-solid fa-book-open"></i> コンセプト</button>
+      <button id="btn-howto" class="btn-topbar"><i class="fa-solid fa-question"></i> 遊び方</button>
+      <button id="btn-notice" class="btn-topbar"><i class="fa-solid fa-triangle-exclamation"></i> 注意</button>
     </div>
   </header>
-
   <main class="dashboard-main">
-    <!-- 中央左 指示書パネル -->
-    <section class="briefing-panel hex-frame" id="briefing-panel" aria-label="調査指示書パネル">
+    <section class="briefing-panel hex-frame" id="briefing-panel">
       <div class="panel-header">
         <span class="panel-header-icon">📋</span>
         <span class="panel-header-title">調査指示書 <small>(MISSION BRIEFING)</small></span>
@@ -67,14 +72,11 @@
         <pre class="briefing-text" id="briefing-text">--</pre>
       </div>
     </section>
-
-    <!-- 右上 STATUSパネル -->
-    <aside class="status-panel" aria-label="調査ステータスパネル">
+    <aside class="status-panel">
       <div class="panel-header">
         <span class="panel-header-icon">📡</span>
         <span class="panel-header-title">STATUS</span>
       </div>
-
       <div class="radar-wrap">
         <div class="radar-scope">
           <div class="radar-rings"></div>
@@ -84,7 +86,6 @@
           <div class="radar-blip b3"></div>
         </div>
       </div>
-
       <div class="status-count-row">
         <span class="status-label">調査済み区画</span>
         <span class="status-value" id="status-count-text">0 / 4</span>
@@ -92,7 +93,6 @@
       <div class="status-progress-track">
         <div class="status-progress-bar" id="status-progress-bar"></div>
       </div>
-
       <div class="clues-section">
         <div class="clues-title">🧩 発見した手がかり</div>
         <ul class="clues-list" id="clues-list">
@@ -101,13 +101,9 @@
       </div>
     </aside>
   </main>
-
-  <!-- 下部 区画カード一覧 -->
-  <section class="sector-cards-section" aria-label="区画一覧">
+  <section class="sector-cards-section">
     <div class="sector-cards" id="sector-cards"></div>
   </section>
-
-  <!-- 最下部 アクションバー -->
   <footer class="action-bar">
     <button id="btn-prev" class="btn-action btn-action-secondary"><i class="fa-solid fa-chevron-left"></i> 前の区画</button>
     <button id="btn-quiz" class="btn-action btn-action-primary">クイズに挑戦する <i class="fa-solid fa-arrow-right"></i></button>
@@ -116,33 +112,45 @@
 </section>
 
 <!-- ============================================================
-     🎉 完了画面
+     🎉 完了画面（スコア・QR・ダウンロード機能付き）
      ============================================================ -->
 <section id="screen-complete" class="screen">
   <div class="complete-card">
     <div class="complete-emblem">🏆</div>
     <h1 class="complete-title">MISSION COMPLETE</h1>
     <p class="complete-team">TEAM: <b id="complete-team-name">---</b></p>
+    <!-- ★★★ スコア（タイム）表示 ★★★ -->
+    <div style="background: rgba(43,240,120,0.1); border: 2px solid var(--c-green); border-radius: 12px; padding: 12px; margin: 12px 0;">
+      <span style="font-size: 14px; color: var(--c-text-dim);">🏅 スコア（所要時間）</span>
+      <div style="font-family: var(--font-display); font-size: 32px; color: var(--c-amber); text-shadow: 0 0 20px rgba(245,158,11,0.5);" id="complete-duration">0分00秒</div>
+    </div>
     <p class="complete-sub">施設のロックダウンは解除された。エヴァキュエーション・エリアへ移動せよ。</p>
     <div class="complete-stats">
-      <div class="complete-stat">
-        <span class="stat-label">調査タイム</span>
-        <span class="stat-value" id="complete-duration">0分00秒</span>
-      </div>
       <div class="complete-stat">
         <span class="stat-label">起動コード</span>
         <span class="stat-value stat-code" id="complete-code">----</span>
       </div>
     </div>
     <ul class="complete-clue-list" id="complete-clue-list"></ul>
-    <p class="complete-note">スタッフに本画面を提示してください。</p>
+    
+    <!-- ★★★ QRコード表示エリア（恐竜コラムへ誘導） ★★★ -->
+    <div style="margin: 16px 0; padding: 12px; background: rgba(56,189,248,0.06); border: 1px dashed var(--c-cyan); border-radius: 8px;">
+      <p style="font-size: 12px; color: var(--c-text-dim); margin: 0 0 8px;">📱 スマホでスキャンして「恐竜コラム」を読む</p>
+      <div id="qr-code-container" style="display: flex; justify-content: center; min-height: 110px;"></div>
+    </div>
+
+    <!-- ★★★ ダウンロードボタン ★★★ -->
+    <button id="btn-download-result" class="btn-primary" style="width: 100%; margin-top: 8px; background: linear-gradient(135deg, #f59e0b, #fcd34d); color: #1a1a1a; box-shadow: 0 0 20px rgba(245,158,11,0.4);">
+      <i class="fa-solid fa-download"></i> 結果を画像で保存（QRコード付き）
+    </button>
+    <p class="complete-note" style="margin-top: 12px;">スタッフに本画面を提示するか、画像をダウンロードして提出してください。</p>
   </div>
 </section>
 
 <!-- ============================================================
      🚨 緊急ロック画面
      ============================================================ -->
-<section id="lock-screen" class="lock-screen" aria-label="セキュリティ違反ロック画面">
+<section id="lock-screen" class="lock-screen">
   <div class="lock-strobe"></div>
   <div class="lock-content">
     <div class="lock-icon">🚨</div>
@@ -165,12 +173,31 @@
 </div>
 
 <!-- ============================================================
-     モーダル：遊び方
+     モーダル：コンセプト / 遊び方 / 注意事項
      ============================================================ -->
+<div id="modal-concept" class="modal-overlay" data-dismissible="true">
+  <div class="modal-box modal-box-lg">
+    <div class="modal-header">
+      <span><i class="fa-solid fa-book-open"></i> ストーリーコンセプト</span>
+      <button id="btn-concept-close" class="btn-modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="line-height: 2; font-size: 15px;">
+        <strong>【ISLA NUBLAR RESEARCH LAB】</strong><br>
+        あなたたちは、イスラ・ヌブラル島にある恐竜研究施設「ISLA NUBLAR RESEARCH LAB」の特別調査チームです。<br><br>
+        突如、施設内の監視システムがダウン。各展示エリア（区画）で飼育されていた恐竜が脱走しました。<br>
+        あなたたちは校内に設置された4つの調査区画を巡り、現場の痕跡から脱走した恐竜の種類を特定し、セキュリティコードを解読する任務を与えられました。<br><br>
+        すべての区画を調査し、入手したコードを連結して最終起動コードを入力し、施設の緊急ロックダウンを解除してください。<br>
+        <span style="color: var(--c-amber);">— タイムはスコアとして記録されます。最速のチームを目指せ！ —</span>
+      </p>
+    </div>
+  </div>
+</div>
+
 <div id="modal-howto" class="modal-overlay" data-dismissible="true">
   <div class="modal-box modal-box-lg">
     <div class="modal-header">
-      <span><i class="fa-solid fa-book-open"></i> 遊び方 HOW TO PLAY</span>
+      <span><i class="fa-solid fa-question"></i> 遊び方 HOW TO PLAY</span>
       <button id="btn-howto-close" class="btn-modal-close">&times;</button>
     </div>
     <div class="modal-body">
@@ -186,9 +213,6 @@
   </div>
 </div>
 
-<!-- ============================================================
-     モーダル：注意事項
-     ============================================================ -->
 <div id="modal-notice" class="modal-overlay" data-dismissible="true">
   <div class="modal-box modal-box-lg">
     <div class="modal-header">
@@ -208,7 +232,7 @@
 </div>
 
 <!-- ============================================================
-     モーダル：クイズ
+     モーダル：クイズ / FINAL
      ============================================================ -->
 <div id="modal-quiz" class="modal-overlay">
   <div class="modal-box modal-box-lg quiz-modal-box">
@@ -218,26 +242,19 @@
     </div>
     <div class="modal-body">
       <p class="quiz-question" id="quiz-modal-question">--</p>
-
       <input type="text" id="quiz-answer-input" class="form-input quiz-input" placeholder="回答を入力..." autocomplete="off">
-
       <p class="quiz-feedback" id="quiz-feedback"></p>
-
       <div class="quiz-box quiz-hint-box hidden" id="quiz-hint-box"></div>
       <div class="quiz-box quiz-explanation-box hidden" id="quiz-explanation-box"></div>
-
       <div class="quiz-actions">
-        <button id="btn-quiz-hint" class="btn-secondary"><i class="fa-solid fa-lightbulb"></i> ヒントを見る</button>
-        <button id="btn-quiz-submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> 回答する</button>
+        <button id="btn-quiz-hint" class="btn-secondary"><i class="fa-solid fa-lightbulb"></i> ヒント</button>
+        <button id="btn-quiz-submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> 回答</button>
         <button id="btn-quiz-close-review" class="btn-primary hidden">閉じる</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ============================================================
-     モーダル：FINAL
-     ============================================================ -->
 <div id="modal-final" class="modal-overlay">
   <div class="modal-box modal-box-lg quiz-modal-box final-modal-box">
     <div class="modal-header">
@@ -250,18 +267,16 @@
       <input type="text" id="final-answer-input" class="form-input quiz-input" placeholder="起動コードを入力..." autocomplete="off">
       <p class="quiz-feedback" id="final-feedback"></p>
       <div class="quiz-actions">
-        <button id="btn-final-submit" class="btn-primary"><i class="fa-solid fa-unlock"></i> ロックダウンを解除する</button>
+        <button id="btn-final-submit" class="btn-primary"><i class="fa-solid fa-unlock"></i> ロックダウンを解除</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ============================================================
-     ⚙️ ADMIN 固定ボタン ＆ モーダル
-     （ロック画面が最前面でも、このボタンは z-index と pointer-events で操作可能）
+     ⚙️ ADMIN
      ============================================================ -->
 <button id="btn-admin-fixed" class="btn-admin-fixed" aria-label="管理者メニュー">⚙️ ADMIN</button>
-
 <div id="modal-admin" class="modal-overlay">
   <div class="modal-box admin-modal-box">
     <div class="modal-header">
@@ -270,23 +285,20 @@
     </div>
     <div class="modal-body">
       <div id="admin-auth-panel">
-        <label for="admin-passcode-input" class="form-label">パスコードを入力してください</label>
+        <label for="admin-passcode-input" class="form-label">パスコード</label>
         <input type="password" id="admin-passcode-input" class="form-input" autocomplete="off">
         <p id="admin-auth-error" class="form-error"></p>
-        <button id="btn-admin-auth-submit" class="btn-primary btn-lg"><i class="fa-solid fa-key"></i> 認証する</button>
+        <button id="btn-admin-auth-submit" class="btn-primary btn-lg"><i class="fa-solid fa-key"></i> 認証</button>
       </div>
       <div id="admin-action-panel" class="hidden">
-        <button id="btn-admin-unlock" class="btn-admin-action">
-          <i class="fa-solid fa-lock-open"></i> ロック解除（再開）
-        </button>
-        <button id="btn-admin-reset" class="btn-admin-action btn-admin-danger">
-          <i class="fa-solid fa-rotate-left"></i> 端末初期化（次のチームへ）
-        </button>
+        <button id="btn-admin-unlock" class="btn-admin-action"><i class="fa-solid fa-lock-open"></i> ロック解除</button>
+        <button id="btn-admin-reset" class="btn-admin-action btn-admin-danger"><i class="fa-solid fa-rotate-left"></i> 端末初期化</button>
       </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="quiz.js"></script>
 </body>
 </html>
