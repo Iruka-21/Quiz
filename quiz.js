@@ -1,1175 +1,887 @@
-// =====================================================
-// JURASSIC WORLD - ISLA NUBLAR RESEARCH LAB
-// 文化祭用 周遊謎解きタブレットシステム
-// quiz.js - ゲームロジック & データ & セキュリティ
-// =====================================================
+/* =========================================================================
+   ISLA NUBLAR RESEARCH LAB — QUIZ EXPEDITION
+   quiz.js
+   -------------------------------------------------------------------------
+   文化祭・校内周遊リアル謎解きゲーム用スクリプト
+   構成:
+     1. CONFIG / 指示書・問題プール データ定義  ← 制作担当者はここを編集
+     2. 状態管理 (localStorage)
+     3. 入力正規化・判定ロジック
+     4. セキュリティ (フルスクリーン / 離脱検知 / 操作禁止 / 緊急ロック)
+     5. 管理者 (ADMIN) 機能
+     6. UI描画・画面制御
+     7. イベントバインド / 初期化
+   ========================================================================= */
 
-// ==================== 問題データプール ====================
-const SECTOR_POOLS = [
-    // ========== 一区画：JUNGLE ==========
-    {
-        id: 0,
-        name: "一区画",
-        shortName: "一区画",
-        areaName: "JUNGLE AREA",
-        icon: "🦖",
-        instructions: "【一区画 調査指示書】\n\n1階 101教室前のジャングルパドックへ向かえ。\n\n現地の展示パネルを調査し、隠されたセキュリティコードを解読せよ。\n\nヒント：パネルに描かれた恐竜の名前が鍵となる。",
-        patterns: [
-            {
-                patternName: "A",
-                title: "一区画：ジャングルエリア (Pattern A)",
-                question: "【問題】\nジャングルパドックの展示パネルには、長い首を持つ草食恐竜が描かれている。\n\nこの恐竜の名前は何か？\n\n※カタカナで入力せよ（例：ティラノサウルス）",
-                answers: ["ブラキオサウルス", "ブラキオ"],
-                hint: "ヒント：首がとても長く、高い木の葉を食べる恐竜だ。名前は「ブラ」で始まる。",
-                explanation: "正解は「ブラキオサウルス」。ジュラ紀を代表する大型草食恐竜で、全長は約25メートルにも達する。"
-            },
-            {
-                patternName: "B",
-                title: "一区画：ジャングルエリア (Pattern B)",
-                question: "【問題】\nジャングルパドックの近くに設置された標識には、3本の角を持つ恐竜のシルエットが描かれている。\n\nこの恐竜の名前は何か？\n\n※カタカナで入力せよ",
-                answers: ["トリケラトプス", "トリケラ"],
-                hint: "ヒント：顔に3本の角を持ち、フリル（えり飾り）が特徴的な恐竜だ。",
-                explanation: "正解は「トリケラトプス」。白亜紀後期に生息した角竜で、その名前は「3本の角を持つ顔」を意味する。"
-            },
-            {
-                patternName: "C",
-                title: "一区画：ジャングルエリア (Pattern C)",
-                question: "【問題】\nジャングルパドックの壁に貼られた警告プレートには、背中に大きな板状の突起を持つ恐竜が描かれている。\n\nこの恐竜の名前は何か？\n\n※カタカナで入力せよ",
-                answers: ["ステゴサウルス", "ステゴ"],
-                hint: "ヒント：背中の骨板が特徴的。名前は「屋根トカゲ」を意味する。",
-                explanation: "正解は「ステゴサウルス」。ジュラ紀後期の剣竜で、背中の骨板は体温調節に使われたと考えられている。"
-            }
-        ]
-    },
-    // ========== 二区画：RIVER ==========
-    {
-        id: 1,
-        name: "二区画",
-        shortName: "二区画",
-        areaName: "RIVER AREA",
-        icon: "🐊",
-        instructions: "【二区画 調査指示書】\n\n2階 201教室前のリバーエリアへ向かえ。\n\n川辺の調査ポイントに隠された古代生物の痕跡を探し出せ。\n\nヒント：水辺に生息する爬虫類に注目。",
-        patterns: [
-            {
-                patternName: "A",
-                title: "二区画：リバーエリア (Pattern A)",
-                question: "【問題】\nリバーエリアの展示には、ジュラ紀の海を支配した巨大な海生爬虫類の化石が展示されている。\n\n長い首と大きなヒレを持つこの生物の名前は？\n\n※カタカナで入力せよ",
-                answers: ["プレシオサウルス", "プレシオ"],
-                hint: "ヒント：「首長竜」とも呼ばれる。ネッシーの正体だと言われることもある。",
-                explanation: "正解は「プレシオサウルス」。ジュラ紀の海に生息した海生爬虫類で、4つのヒレを使って泳いでいた。"
-            },
-            {
-                patternName: "B",
-                title: "二区画：リバーエリア (Pattern B)",
-                question: "【問題】\nリバーエリアのパネルには、現代のワニに似た姿を持つ古代爬虫類が描かれている。\n\nジュラ紀に水辺で獲物を待ち伏せていたこの生物は？\n\n※カタカナで入力せよ",
-                answers: ["サルコスクス", "サルコ"],
-                hint: "ヒント：「肉ワニ」という意味の名前を持つ。全長は10メートルを超える。",
-                explanation: "正解は「サルコスクス」。白亜紀前期に生息した巨大なワニの仲間で、恐竜さえも捕食したと考えられている。"
-            },
-            {
-                patternName: "C",
-                title: "二区画：リバーエリア (Pattern C)",
-                question: "【問題】\nリバーエリアの展示で、小さな貝の化石が多数見つかっている。\n\nジュラ紀の浅い海に生息していた、螺旋状の殻を持つこの生物の総称は？\n\n※カタカナで入力せよ",
-                answers: ["アンモナイト", "アンモ"],
-                hint: "ヒント：巻き貝のような形をした化石。名前は古代エジプトの神にちなむ。",
-                explanation: "正解は「アンモナイト」。ジュラ紀から白亜紀にかけて繁栄した頭足類で、示準化石として地質学で重要。"
-            }
-        ]
-    },
-    // ========== 三区画：AVIARY ==========
-    {
-        id: 2,
-        name: "三区画",
-        shortName: "三区画",
-        areaName: "AVIARY AREA",
-        icon: "🦅",
-        instructions: "【三区画 調査指示書】\n\n3階 301教室前のアビアリー（鳥小屋）エリアへ向かえ。\n\n空を飛ぶ古代生物の展示を調査し、飛行コードを解読せよ。\n\nヒント：恐竜から進化した生物に注目。",
-        patterns: [
-            {
-                patternName: "A",
-                title: "三区画：アビアリーエリア (Pattern A)",
-                question: "【問題】\nアビアリーの展示には、翼を広げると10メートルを超える巨大な飛行爬虫類が展示されている。\n\nこの空の支配者の名前は？\n\n※カタカナで入力せよ",
-                answers: ["ケツァルコアトルス", "ケツァル"],
-                hint: "ヒント：アステカ神話の羽毛の蛇の神にちなんで名付けられた。",
-                explanation: "正解は「ケツァルコアトルス」。白亜紀後期に生息した史上最大級の飛行生物で、翼開長は10〜12メートル。"
-            },
-            {
-                patternName: "B",
-                title: "三区画：アビアリーエリア (Pattern B)",
-                question: "【問題】\nアビアリーの展示パネルで、鳥類の祖先と考えられている小型の肉食恐竜が紹介されている。\n\n羽毛を持ち、木の枝で生活していたとされるこの恐竜は？\n\n※カタカナで入力せよ",
-                answers: ["ミクロラプトル", "ミクロ"],
-                hint: "ヒント：名前は「小さな泥棒」を意味する。4枚の翼を持っていた。",
-                explanation: "正解は「ミクロラプトル」。白亜紀前期の小型獣脚類で、前肢と後肢の両方に翼があった。"
-            },
-            {
-                patternName: "C",
-                title: "三区画：アビアリーエリア (Pattern C)",
-                question: "【問題】\nアビアリーの展示で、白亜紀の空を飛んでいた爬虫類のグループ名が問われている。\n\n恐竜とは異なる系統の飛行爬虫類の総称は？\n\n※カタカナで入力せよ",
-                answers: ["プテラノドン", "プテラ"],
-                hint: "ヒント：翼指竜（よくしりゅう）とも呼ばれる。「翼のある指」という意味。",
-                explanation: "正解は「プテラノドン」。白亜紀後期の翼竜で、頭の後ろに長いトサカを持つのが特徴。"
-            }
-        ]
-    },
-    // ========== 四区画：LAB ==========
-    {
-        id: 3,
-        name: "四区画",
-        shortName: "四区画",
-        areaName: "LAB AREA",
-        icon: "🧬",
-        instructions: "【四区画 調査指示書】\n\n4階 401教室前のラボエリアへ向かえ。\n\n研究施設のデータベースにアクセスし、遺伝子コードを解読せよ。\n\nヒント：DNAと恐竜の関係について考えよ。",
-        patterns: [
-            {
-                patternName: "A",
-                title: "四区画：ラボエリア (Pattern A)",
-                question: "【問題】\nラボの展示パネルには、恐竜のDNAを復元する研究について説明されている。\n\nジュラシック・ワールドの物語で、DNAの欠損を補うために使われた現代の生物は？\n\n※カタカナで入力せよ",
-                answers: ["カエル", "アフリカツメガエル"],
-                hint: "ヒント：両生類の一種。水辺に生息し、卵を産む。",
-                explanation: "正解は「カエル」。映画では恐竜のDNAの欠損部分を補うためにカエルのDNAが使用された。"
-            },
-            {
-                patternName: "B",
-                title: "四区画：ラボエリア (Pattern B)",
-                question: "【問題】\nラボの展示で、遺伝子情報を保存する生体分子の名前が問われている。\n\n二重らせん構造を持つこの分子は？\n\n※アルファベット3文字で入力せよ",
-                answers: ["DNA", "ＤＮＡ", "dna"],
-                hint: "ヒント：デオキシリボ核酸の略称。",
-                explanation: "正解は「DNA」。すべての生物の設計図となる分子で、アデニン・チミン・グアニン・シトシンの4つの塩基で構成される。"
-            },
-            {
-                patternName: "C",
-                title: "四区画：ラボエリア (Pattern C)",
-                question: "【問題】\nラボの研究資料に、恐竜が絶滅した原因についての記述がある。\n\n約6600万年前に起こったとされる、恐竜絶滅の主な原因は？\n\n※カタカナで入力せよ",
-                answers: ["隕石衝突", "いんせきしょうとつ", "小惑星衝突"],
-                hint: "ヒント：巨大な天体が地球に落下した。メキシコのユカタン半島に痕跡がある。",
-                explanation: "正解は「隕石衝突」。チクシュルーブ・クレーターを形成した小惑星の衝突が、恐竜を含む多くの生物の大量絶滅を引き起こした。"
-            }
-        ]
-    },
-    // ========== FINAL ==========
-    {
-        id: 4,
-        name: "FINAL",
-        shortName: "FINAL",
-        areaName: "FINAL MISSION",
-        icon: "🏆",
-        instructions: "【FINAL MISSION 最終指令】\n\nすべての区画調査が完了した。\n\n1階ホールの本部に戻り、最終問題に挑戦せよ。\n\n集めたすべての手がかりを組み合わせ、ISLA NUBLARの謎を解き明かせ！",
-        patterns: [
-            {
-                patternName: "A",
-                title: "FINAL MISSION (Pattern A)",
-                question: "【最終問題】\n\nこれまでの調査で、あなたはジュラシック・ワールドの様々な恐竜について学んできた。\n\n映画『ジュラシック・パーク』で、最も象徴的な肉食恐竜として描かれた恐竜の名前は？\n\n※カタカナで入力せよ",
-                answers: ["ティラノサウルス", "ティラノ", "Tレックス", "T-REX"],
-                hint: "ヒント：名前は「暴君トカゲ」を意味する。白亜紀最強の捕食者。",
-                explanation: "正解は「ティラノサウルス」。全長約12メートル、体重約8トンの史上最大級の肉食恐竜。その名前は「暴君トカゲ」を意味する。"
-            },
-            {
-                patternName: "B",
-                title: "FINAL MISSION (Pattern B)",
-                question: "【最終問題】\n\nすべての調査区画を踏破したあなたに、最後の謎が提示される。\n\nジュラシック・ワールドのテーマである「生命は道を見つける」という言葉。\n\nこの言葉を最初に語った映画のキャラクターは誰か？\n\n※カタカナで入力せよ",
-                answers: ["マルコム", "イアンマルコム", "イアン・マルコム"],
-                hint: "ヒント：カオス理論の数学者。演じたのはジェフ・ゴールドブラム。",
-                explanation: "正解は「イアン・マルコム」。カオス理論の専門家として、恐竜テーマパークの危険性を最初から警告していた。"
-            },
-            {
-                patternName: "C",
-                title: "FINAL MISSION (Pattern C)",
-                question: "【最終問題】\n\n探検の集大成として、ISLA NUBLAR（ヌブラル島）の名前の意味が問われる。\n\n「Nublar」はスペイン語で何を意味するか？\n\n※カタカナで入力せよ",
-                answers: ["雲", "くも", "クラウド"],
-                hint: "ヒント：空に浮かぶ白いもの。スペイン語の「nube」に由来する。",
-                explanation: "正解は「雲」。ISLA NUBLARは「雲の島」という意味で、霧に覆われた島の様子から名付けられた。"
-            }
-        ]
-    }
-];
+/* ============================== 1. CONFIG =============================== */
 
-// ==================== 定数 ====================
-const ADMIN_PASSWORD = "admin";
-const STORAGE_KEY = "jw_expedition_data";
-const LOCK_CODE = "JW-SEC-001";
-const TOTAL_SECTORS = 4; // FINALを含まない通常区画数
-
-// ==================== 状態管理 ====================
-let gameState = {
-    teamName: "",
-    currentSector: 0, // 現在の区画インデックス
-    clearedSectors: [], // クリア済み区画のインデックス配列
-    selectedPatterns: {}, // { sectorIndex: patternIndex }
-    isLocked: false,
-    gamePhase: "registration", // "registration" | "playing" | "completed"
-    completedAt: null,
-    quizInProgress: false,
-    currentQuizPattern: null,
-    hintShown: false,
-    violationCount: 0,
-    lastVisibilityChange: 0,
-    isFullscreen: false,
-    adminAuthenticated: false,
+const CONFIG = {
+  STORAGE_KEY: 'jw_quiz_expedition_state_v1',
+  ADMIN_PASSCODE: 'admin', // 🔑 管理者パスコード（必要に応じて変更してください）
+  SECTOR_COUNT: 4,
 };
 
-// ==================== DOM要素の参照 ====================
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => document.querySelectorAll(selector);
+/* --------------------------------------------------------------------------
+   📋 SECTOR_POOLS — 区画ごとの指示書＆問題プール
+   ・instructions … 調査指示書（ストーリー・移動先）に表示するテキスト
+   ・patterns[]   … 出題パターン。チーム登録時にランダムで1つ選ばれ固定される
+   ・answers[]    … 正解として許容する表記のバリエーション（自由に追加可）
+   ・clueCode     … 正解時に手に入る「起動コード」の欠片（FINALで使用）
+   -------------------------------------------------------------------------- */
+const SECTOR_POOLS = [
+  {
+    id: 0,
+    name: '一区画',
+    shortName: '一区画',
+    areaName: 'JUNGLE AREA',
+    icon: '🦖',
+    location: '1階 101教室前「ジャングル・パドック」',
+    instructions:
+      '【CHAPTER 1 - JUNGLE AREA】\n' +
+      '監視ドローンからの通信が途絶えた。まず 1階 101教室前 の「ジャングル・パドック」展示エリアへ向かえ。\n' +
+      '現地の展示パネルに残された足跡と記録を調査し、逃走した草食竜を特定してセキュリティコードを解読せよ。\n' +
+      '解読したコードはこの端末のQUIZ入力欄へ送信すること。',
+    patterns: [
+      {
+        patternName: 'A',
+        title: '一区画：ジャングルエリア (Pattern A)',
+        question:
+          'パドックの記録には「体長20m級。小さな頭部と長い首を持つ、竜脚類の中でも屈指の大きさを誇る草食竜」と記されている。\n' +
+          'この恐竜の名前を英語（アルファベット）で入力せよ。',
+        answers: ['BRACHIOSAURUS', 'ブラキオサウルス'],
+        hint: 'ヒント：首がとても長く、キリンのように高い木の葉を食べる巨大な竜脚類だ。',
+        explanation: '正解は「ブラキオサウルス」。竜脚類の中でも特に首が長く、映画シリーズの象徴的存在として度々登場する草食恐竜だ。',
+        clueCode: 'J7',
+      },
+      {
+        patternName: 'B',
+        title: '一区画：ジャングルエリア (Pattern B)',
+        question:
+          'パドックのモニターには「頭部に3本の角と、大きなフリル（えり飾り）を持つ草食竜が柵を突破」と警告表示が出ている。\n' +
+          'この恐竜の名前をカタカナで入力せよ。',
+        answers: ['トリケラトプス', 'TRICERATOPS'],
+        hint: 'ヒント：鼻先と両目の上に、合計3本の角を持つ姿が特徴的な草食恐竜だ。',
+        explanation: '正解は「トリケラトプス」。3本の角と大きなフリルを持ち、力強い突進で肉食恐竜にも対抗する草食恐竜だ。',
+        clueCode: 'J3',
+      },
+    ],
+  },
+  {
+    id: 1,
+    name: '二区画',
+    shortName: '二区画',
+    areaName: 'RIVER AREA',
+    icon: '🌊',
+    location: '2階 図書室前「リバー・アドベンチャー」乗船口',
+    instructions:
+      '【CHAPTER 2 - RIVER AREA】\n' +
+      '次の調査エリアは 2階 図書室前 の「リバー・アドベンチャー」乗船口だ。\n' +
+      '水位センサーが異常な水しぶきを検知している。ログに残された痕跡を調査し、氾濫の原因となった水棲の爬虫類を特定せよ。',
+    patterns: [
+      {
+        patternName: 'A',
+        title: '二区画：リバーエリア (Pattern A)',
+        question:
+          '河川に生息し、ワニのように長い顎と、背中に帆のような大きな棘を持つ肉食恐竜がセンサーに記録された。\n' +
+          'この恐竜の名前を英語（アルファベット）で入力せよ。',
+        answers: ['SPINOSAURUS', 'スピノサウルス'],
+        hint: 'ヒント：背中に帆のようなトゲの並びがあり、水辺を好む珍しい肉食恐竜だ。',
+        explanation: '正解は「スピノサウルス」。背中の棘状突起（帆）と細長い顎が特徴で、水辺を生活圏とする肉食恐竜だ。',
+        clueCode: 'R9',
+      },
+      {
+        patternName: 'B',
+        title: '二区画：リバーエリア (Pattern B)',
+        question:
+          '乗船口下の巨大水槽に、水上ショーの主役として知られる超巨大な海棲爬虫類の影が記録された。\n' +
+          'この生物の名前をカタカナで入力せよ。',
+        answers: ['モササウルス', 'MOSASAURUS'],
+        hint: 'ヒント：恐竜ではなく海棲爬虫類。巨大水槽の底から飛び出し、サメを一飲みにするほどの怪物だ。',
+        explanation: '正解は「モササウルス」。恐竜ではなく海棲爬虫類の一種で、巨大な水上ショー施設の主役として知られる。',
+        clueCode: 'R4',
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: '三区画',
+    shortName: '三区画',
+    areaName: 'AVIARY AREA',
+    icon: '🦅',
+    location: '3階 視聴覚室前「プテラノドン・アビアリー」',
+    instructions:
+      '【CHAPTER 3 - AVIARY AREA】\n' +
+      '巨大な鳥かご式ドーム「アビアリー」のゲートが開放状態になっている。3階 視聴覚室前 へ急行せよ。\n' +
+      'ドーム内に残された鳴き声データを解析し、逃走した翼竜を突き止めよ。',
+    patterns: [
+      {
+        patternName: 'A',
+        title: '三区画：アビアリーエリア (Pattern A)',
+        question:
+          '翼を広げると7mを超え、歯のないクチバシと後頭部の大きなトサカを持つ翼竜がドームから消えた。\n' +
+          'この翼竜の名前を英語（アルファベット）で入力せよ。',
+        answers: ['PTERANODON', 'プテラノドン'],
+        hint: 'ヒント：後頭部から伸びる大きなトサカと、歯のないクチバシが特徴の巨大な翼竜だ。',
+        explanation: '正解は「プテラノドン」。歯のないクチバシと後頭部の大きなトサカが特徴的な、代表的な翼竜だ。',
+        clueCode: 'A2',
+      },
+      {
+        patternName: 'B',
+        title: '三区画：アビアリーエリア (Pattern B)',
+        question:
+          '群れで行動し、鋭い歯の並ぶ細長い顎を持つ小〜中型の翼竜が、複数体ドームの外へ逃走した記録がある。\n' +
+          'この翼竜の名前をカタカナで入力せよ。',
+        answers: ['ディモルフォドン', 'DIMORPHODON'],
+        hint: 'ヒント：小柄だが群れで襲ってくる、鋭い歯を持つ翼竜だ。',
+        explanation: '正解は「ディモルフォドン」。小柄な体に鋭い歯を持ち、群れで行動する翼竜として知られる。',
+        clueCode: 'A6',
+      },
+    ],
+  },
+  {
+    id: 3,
+    name: '四区画',
+    shortName: '四区画',
+    areaName: 'LAB AREA',
+    icon: '🧬',
+    location: '特別棟1階 理科室「創世研究ラボ」',
+    instructions:
+      '【CHAPTER 4 - LAB AREA】\n' +
+      '最終調査区画は 特別棟1階 理科室 の「創世研究ラボ」だ。\n' +
+      '遺伝子シーケンサーに残されたロック画面のクイズに正解し、最終起動コードの最後の欠片を入手せよ。',
+    patterns: [
+      {
+        patternName: 'A',
+        title: '四区画：ラボエリア (Pattern A)',
+        question:
+          '研究チームは、琥珀の中に閉じ込められた古代の吸血生物から恐竜のDNAを採取したという。\n' +
+          'この吸血生物の名前を日本語で入力せよ。',
+        answers: ['蚊', 'か', 'カ', 'MOSQUITO'],
+        hint: 'ヒント：血を吸う小さな昆虫。夏になるとブンブン飛んでくるアレだ。',
+        explanation: '正解は「蚊」。琥珀に閉じ込められた古代の蚊の体内に残る血液から、恐竜のDNAが採取されたという設定だ。',
+        clueCode: 'L5',
+      },
+      {
+        patternName: 'B',
+        title: '四区画：ラボエリア (Pattern B)',
+        question:
+          '研究者たちが「全ての恐竜を統べる、最強最大の存在」として作り出したと噂される新種の肉食恐竜がいる。\n' +
+          'この恐竜の名前を英語（アルファベット）で入力せよ。',
+        answers: ['INDOMINUS REX', 'INDOMINUSREX', 'インドミナスレックス', 'インドミナス・レックス'],
+        hint: 'ヒント：「征服できない」という意味の名を持つ、人工的に作られたとされる新種の肉食恐竜だ。',
+        explanation: '正解は「インドミナス・レックス」。研究者たちの手によって生み出されたとされる、最強クラスの新種肉食恐竜だ。',
+        clueCode: 'L8',
+      },
+    ],
+  },
+];
 
-// ==================== 初期化 ====================
-document.addEventListener("DOMContentLoaded", () => {
-    loadGameState();
-    setupEventListeners();
-    setupSecurity();
-    renderAll();
-    checkScreenSize();
-});
+/* FINAL区画（コード組立チャレンジ） */
+const FINAL_SECTOR = {
+  id: 'final',
+  name: 'FINAL',
+  shortName: 'FINAL',
+  areaName: 'CONTROL CENTER',
+  icon: '🚨',
+  location: '体育館ステージ前「メインコントロールセンター」',
+  instructions:
+    '【FINAL CHAPTER - CONTROL CENTER】\n' +
+    '全区画の調査、お疲れさまでした。体育館ステージ前 の「メインコントロールセンター」に集合せよ。\n' +
+    'これまで入手した4つの起動コード欠片を、調査した順番のまま連結して入力し、施設の緊急ロックダウンを解除せよ。',
+};
 
-// ==================== ローカルストレージ ====================
-function saveGameState() {
-    try {
-        const data = JSON.stringify(gameState);
-        localStorage.setItem(STORAGE_KEY, data);
-    } catch (e) {
-        console.warn("localStorage save failed:", e);
-    }
+/* ============================== 2. 状態管理 =============================== */
+
+/** デフォルト状態を生成 */
+function createDefaultState() {
+  return {
+    teamName: '',
+    createdAt: null,
+    selectedPatterns: [],   // 各区画で選ばれた patterns[] のインデックス
+    clearedSectors: 0,      // クリア済み区画数 (0-4)
+    clues: [],               // { sectorName, code } を収集順に格納
+    wrongAttempts: [0, 0, 0, 0],
+    finalCleared: false,
+    completedAt: null,
+    locked: false,
+    lockReason: '',
+  };
 }
 
-function loadGameState() {
-    try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed && typeof parsed === "object") {
-                gameState = { ...gameState, ...parsed };
-            }
-        }
-    } catch (e) {
-        console.warn("localStorage load failed:", e);
-    }
+let state = createDefaultState();
+/** 現在ダッシュボードで表示中の区画インデックス（0-3 通常区画 / 4 = FINAL） メモリ上のみ保持 */
+let viewIndex = 0;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (!raw) return createDefaultState();
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return createDefaultState();
+    // 欠損フィールドを補完
+    const def = createDefaultState();
+    return Object.assign(def, parsed);
+  } catch (e) {
+    console.warn('状態の読み込みに失敗しました。初期状態を使用します。', e);
+    return createDefaultState();
+  }
 }
 
-function clearGameState() {
-    gameState = {
-        teamName: "",
-        currentSector: 0,
-        clearedSectors: [],
-        selectedPatterns: {},
-        isLocked: false,
-        gamePhase: "registration",
-        completedAt: null,
-        quizInProgress: false,
-        currentQuizPattern: null,
-        hintShown: false,
-        violationCount: 0,
-        lastVisibilityChange: 0,
-        isFullscreen: false,
-        adminAuthenticated: false,
-    };
-    saveGameState();
+function saveState() {
+  try {
+    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn('状態の保存に失敗しました。', e);
+  }
 }
 
-// ==================== セキュリティ機能 ====================
-function setupSecurity() {
-    // 右クリック禁止
-    document.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        return false;
-    });
-
-    // テキスト選択・コピー禁止
-    document.addEventListener("copy", (e) => {
-        e.preventDefault();
-        return false;
-    });
-
-    document.addEventListener("cut", (e) => {
-        e.preventDefault();
-        return false;
-    });
-
-    document.addEventListener("selectstart", (e) => {
-        if (!e.target.classList.contains("quiz-answer-input") &&
-            !e.target.classList.contains("team-name-input") &&
-            !e.target.classList.contains("admin-password-input")) {
-            e.preventDefault();
-        }
-    });
-
-    // キーボードショートカット禁止（F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U など）
-    document.addEventListener("keydown", (e) => {
-        // F12
-        if (e.key === "F12") {
-            e.preventDefault();
-            triggerSecurityViolation("F12キーが押されました");
-            return false;
-        }
-        // Ctrl+Shift+I / Cmd+Option+I
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "I" || e.key === "i")) {
-            e.preventDefault();
-            triggerSecurityViolation("開発者ツールが開かれました");
-            return false;
-        }
-        // Ctrl+Shift+J / Cmd+Option+J
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "J" || e.key === "j")) {
-            e.preventDefault();
-            triggerSecurityViolation("開発者コンソールが開かれました");
-            return false;
-        }
-        // Ctrl+U / Cmd+U
-        if ((e.ctrlKey || e.metaKey) && (e.key === "U" || e.key === "u")) {
-            e.preventDefault();
-            triggerSecurityViolation("ソースコード表示が試行されました");
-            return false;
-        }
-        // Ctrl+S / Cmd+S
-        if ((e.ctrlKey || e.metaKey) && (e.key === "S" || e.key === "s")) {
-            e.preventDefault();
-            return false;
-        }
-        // Ctrl+P / Cmd+P
-        if ((e.ctrlKey || e.metaKey) && (e.key === "P" || e.key === "p")) {
-            e.preventDefault();
-            return false;
-        }
-    });
-
-    // Page Visibility API - タブ切り替え検知
-    document.addEventListener("visibilitychange", () => {
-        const now = Date.now();
-        // 誤爆防止: 500ms以内の連続イベントは無視
-        if (now - gameState.lastVisibilityChange < 500) {
-            return;
-        }
-        gameState.lastVisibilityChange = now;
-
-        if (document.hidden) {
-            // フルスクリーン遷移中の一時的なhiddenを許容
-            // iOS Safariのフルスクリーンや、ソフトウェアキーボード起因のイベントを除外
-            if (!isTransitioningFullscreen()) {
-                triggerSecurityViolation("画面が離脱しました");
-            }
-        }
-    });
-
-    // ウィンドウのフォーカス喪失
-    window.addEventListener("blur", () => {
-        const now = Date.now();
-        if (now - gameState.lastVisibilityChange < 500) return;
-        gameState.lastVisibilityChange = now;
-        // フルスクリーン遷移中や、入力フィールドのフォーカス移動は許容
-        if (!isTransitioningFullscreen() && gameState.gamePhase === "playing" && !gameState.isLocked) {
-            triggerSecurityViolation("ウィンドウのフォーカスが外れました");
-        }
-    });
-
-    // タッチデバイスのスワイプによる戻る操作防止
-    window.addEventListener("popstate", (e) => {
-        e.preventDefault();
-        triggerSecurityViolation("ブラウザの戻る操作が検出されました");
-    });
-
-    // iOSのジェスチャーによるズーム防止
-    document.addEventListener("gesturestart", (e) => {
-        e.preventDefault();
-    });
-
-    document.addEventListener("gesturechange", (e) => {
-        e.preventDefault();
-    });
-
-    document.addEventListener("gestureend", (e) => {
-        e.preventDefault();
-    });
+function clearState() {
+  try {
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
+  } catch (e) { /* noop */ }
+  state = createDefaultState();
+  viewIndex = 0;
 }
 
-function isTransitioningFullscreen() {
-    // フルスクリーンAPIの遷移中かどうかを判定
-    const doc = document;
-    return !!(doc.fullscreenElement !== null && doc.fullscreenElement === undefined) ||
-        document.webkitFullscreenElement !== undefined ||
-        document.fullscreenElement !== undefined;
-}
-
-function triggerSecurityViolation(reason) {
-    if (gameState.isLocked) return;
-    if (gameState.gamePhase !== "playing") return;
-
-    gameState.violationCount++;
-    gameState.isLocked = true;
-    saveGameState();
-    showLockScreen();
-    console.warn("SECURITY VIOLATION:", reason);
-}
-
-function showLockScreen() {
-    const lockScreen = $("#lockScreen");
-    const dashboard = $("#dashboard");
-    const registrationModal = $("#registrationModal");
-    const quizModal = $("#quizModal");
-    const resultModal = $("#resultModal");
-    const howToModal = $("#howToModal");
-    const warningModal = $("#warningModal");
-    const completionModal = $("#completionModal");
-
-    // すべてのモーダルを閉じる
-    [quizModal, resultModal, howToModal, warningModal, completionModal].forEach(m => {
-        if (m) m.classList.add("hidden");
-    });
-
-    if (registrationModal) registrationModal.classList.add("hidden");
-    if (dashboard) dashboard.classList.add("hidden");
-    if (lockScreen) lockScreen.classList.remove("hidden");
-
-    // ロックコードを表示
-    const lockCodeDisplay = $("#lockCodeDisplay");
-    if (lockCodeDisplay) {
-        lockCodeDisplay.textContent = `CODE: ${LOCK_CODE} (違反回数: ${gameState.violationCount})`;
-    }
-}
-
-function hideLockScreen() {
-    const lockScreen = $("#lockScreen");
-    if (lockScreen) lockScreen.classList.add("hidden");
-    gameState.isLocked = false;
-    gameState.lastVisibilityChange = Date.now();
-    saveGameState();
-    renderAll();
-}
-
-// ==================== フルスクリーン制御 ====================
-function requestFullscreen() {
-    const el = document.documentElement;
-    if (el.requestFullscreen) {
-        el.requestFullscreen().catch(() => {
-            gameState.isFullscreen = false;
-        });
-    } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-    } else if (el.msRequestFullscreen) {
-        el.msRequestFullscreen();
-    } else {
-        // フルスクリーン非対応（iOS Safariなど）
-        gameState.isFullscreen = false;
-        console.log("Fullscreen API not supported - continuing without fullscreen");
-    }
-}
-
-function exitFullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-    }
-}
-
-// ==================== イベントリスナー設定 ====================
-function setupEventListeners() {
-    // チーム登録
-    $("#btnRegister")?.addEventListener("click", handleRegistration);
-    $("#teamNameInput")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") handleRegistration();
-    });
-
-    // 遊び方・注意事項
-    $("#btnHowTo")?.addEventListener("click", () => {
-        $("#howToModal").classList.remove("hidden");
-    });
-    $("#btnCloseHowTo")?.addEventListener("click", () => {
-        $("#howToModal").classList.add("hidden");
-    });
-    $("#btnWarning")?.addEventListener("click", () => {
-        $("#warningModal").classList.remove("hidden");
-    });
-    $("#btnCloseWarning")?.addEventListener("click", () => {
-        $("#warningModal").classList.add("hidden");
-    });
-
-    // アクションバー
-    $("#btnPrevSector")?.addEventListener("click", handlePrevSector);
-    $("#btnNextSector")?.addEventListener("click", handleNextSector);
-    $("#btnQuiz")?.addEventListener("click", handleQuizButton);
-
-    // クイズモーダル
-    $("#btnCloseResult")?.addEventListener("click", () => {
-        $("#resultModal").classList.add("hidden");
-        if (gameState.gamePhase === "completed") {
-            showCompletionModal();
-        }
-    });
-
-    $("#btnCloseCompletion")?.addEventListener("click", () => {
-        $("#completionModal").classList.add("hidden");
-    });
-
-    // 管理者
-    $("#btnAdmin")?.addEventListener("click", openAdminModal);
-    $("#btnCloseAdmin")?.addEventListener("click", closeAdminModal);
-    $("#btnAdminLogin")?.addEventListener("click", handleAdminLogin);
-    $("#adminPassword")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") handleAdminLogin();
-    });
-    $("#btnAdminUnlock")?.addEventListener("click", handleAdminUnlock);
-    $("#btnAdminReset")?.addEventListener("click", handleAdminReset);
-
-    // 確認ダイアログ
-    $("#btnConfirmCancel")?.addEventListener("click", () => {
-        $("#confirmModal").classList.add("hidden");
-    });
-    $("#btnConfirmOK")?.addEventListener("click", handleConfirmOK);
-}
-
-// ==================== チーム登録処理 ====================
-function handleRegistration() {
-    const input = $("#teamNameInput");
-    const errorEl = $("#registrationError");
-    const name = input.value.trim();
-
-    if (!name) {
-        errorEl.classList.remove("hidden");
-        return;
-    }
-
-    errorEl.classList.add("hidden");
-    gameState.teamName = name;
-    gameState.currentSector = 0;
-    gameState.clearedSectors = [];
-    gameState.selectedPatterns = {};
-    gameState.isLocked = false;
-    gameState.gamePhase = "playing";
-    gameState.completedAt = null;
-    gameState.violationCount = 0;
-    gameState.quizInProgress = false;
-    gameState.currentQuizPattern = null;
-    gameState.hintShown = false;
-
-    // 各区画からランダムに1問ずつ抽選
-    for (let i = 0; i < SECTOR_POOLS.length; i++) {
-        const pool = SECTOR_POOLS[i];
-        const patternCount = pool.patterns.length;
-        const selectedIndex = Math.floor(Math.random() * patternCount);
-        gameState.selectedPatterns[i] = selectedIndex;
-    }
-
-    saveGameState();
-
-    // 登録モーダルを閉じる
-    $("#registrationModal").classList.add("hidden");
-
-    // フルスクリーン化
-    requestFullscreen();
-
-    renderAll();
-}
-
-// ==================== ナビゲーション処理 ====================
-function handlePrevSector() {
-    if (gameState.currentSector > 0) {
-        gameState.currentSector--;
-        gameState.quizInProgress = false;
-        gameState.hintShown = false;
-        saveGameState();
-        renderAll();
-    }
-}
-
-function handleNextSector() {
-    const maxSector = SECTOR_POOLS.length - 1; // FINALを含む
-    if (gameState.currentSector < maxSector) {
-        // 次の区画が解放されているか確認
-        if (gameState.currentSector < TOTAL_SECTORS) {
-            // 通常区画（0-3）の場合は、現在の区画がクリア済みである必要がある
-            if (!gameState.clearedSectors.includes(gameState.currentSector)) {
-                return;
-            }
-        }
-        gameState.currentSector++;
-        gameState.quizInProgress = false;
-        gameState.hintShown = false;
-        saveGameState();
-        renderAll();
-    }
-}
-
-function handleQuizButton() {
-    if (gameState.isLocked) return;
-    if (gameState.gamePhase !== "playing") return;
-
-    const sector = SECTOR_POOLS[gameState.currentSector];
-    if (!sector) return;
-
-    // 通常区画（FINALではない）の場合、すでにクリア済みか確認
-    if (gameState.currentSector < TOTAL_SECTORS && gameState.clearedSectors.includes(gameState.currentSector)) {
-        // すでにクリア済み
-        openQuizModal(sector, true);
-        return;
-    }
-
-    // FINAL区画の場合、すべての通常区画がクリアされているか確認
-    if (gameState.currentSector === TOTAL_SECTORS) {
-        if (gameState.clearedSectors.length < TOTAL_SECTORS) {
-            alert("⚠️ すべての区画をクリアしてからFINALに挑戦してください。");
-            return;
-        }
-    }
-
-    openQuizModal(sector, false);
-}
-
-// ==================== クイズモーダル処理 ====================
-function openQuizModal(sector, alreadyCleared = false) {
-    const modal = $("#quizModal");
-    const content = $("#quizContent");
-    const footer = $("#quizModalFooter");
-    const titleEl = $("#quizModalTitle");
-    const subtitleEl = $("#quizModalSubtitle");
-    const iconEl = $("#quizModalIcon");
-
-    const patternIndex = gameState.selectedPatterns[gameState.currentSector];
-    const pattern = sector.patterns[patternIndex];
-
-    if (!pattern) {
-        console.error("Pattern not found for sector", gameState.currentSector);
-        return;
-    }
-
-    gameState.currentQuizPattern = pattern;
-    gameState.quizInProgress = true;
-    gameState.hintShown = false;
-
-    titleEl.textContent = sector.name + " クイズ";
-    subtitleEl.textContent = `${sector.areaName} - PATTERN ${pattern.patternName}`;
-    iconEl.textContent = sector.icon;
-
-    const isCleared = alreadyCleared || gameState.clearedSectors.includes(gameState.currentSector);
-
-    let html = `
-        <div class="quiz-pattern-badge">PATTERN ${pattern.patternName} / ${sector.areaName}</div>
-        <div class="quiz-question">${escapeHtml(pattern.question)}</div>
-        <div class="quiz-hint-section hidden" id="quizHintSection">
-            <div class="quiz-hint-label">💡 ヒント</div>
-            <div class="quiz-hint-text">${escapeHtml(pattern.hint)}</div>
-        </div>
-    `;
-
-    if (isCleared) {
-        html += `
-            <div class="quiz-answer-section">
-                <p style="text-align:center;color:var(--green-glow);font-weight:700;">✅ この区画はクリア済みです</p>
-            </div>
-        `;
-        content.innerHTML = html;
-        footer.innerHTML = `
-            <button id="btnQuizClose" class="btn-modal btn-secondary">閉じる</button>
-        `;
-    } else {
-        html += `
-            <div class="quiz-answer-section">
-                <input type="text" id="quizAnswerInput" class="quiz-answer-input" placeholder="答えを入力..." autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
-                <div class="quiz-btn-group">
-                    <button id="btnShowHint" class="btn-modal btn-hint">💡 ヒントを見る</button>
-                    <button id="btnSubmitAnswer" class="btn-modal btn-primary btn-submit">回答する</button>
-                </div>
-            </div>
-        `;
-        content.innerHTML = html;
-        footer.innerHTML = `
-            <button id="btnQuizCancel" class="btn-modal btn-secondary">キャンセル</button>
-        `;
-
-        // イベントリスナー
-        $("#btnShowHint")?.addEventListener("click", () => {
-            gameState.hintShown = true;
-            $("#quizHintSection").classList.remove("hidden");
-        });
-
-        $("#btnSubmitAnswer")?.addEventListener("click", handleAnswerSubmission);
-        $("#quizAnswerInput")?.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") handleAnswerSubmission();
-        });
-
-        // フォーカス
-        setTimeout(() => {
-            $("#quizAnswerInput")?.focus();
-        }, 300);
-    }
-
-    $("#btnQuizClose")?.addEventListener("click", () => {
-        modal.classList.add("hidden");
-        gameState.quizInProgress = false;
-    });
-
-    $("#btnQuizCancel")?.addEventListener("click", () => {
-        modal.classList.add("hidden");
-        gameState.quizInProgress = false;
-    });
-
-    modal.classList.remove("hidden");
-}
-
-function handleAnswerSubmission() {
-    const input = $("#quizAnswerInput");
-    if (!input) return;
-
-    const userAnswer = input.value.trim();
-    if (!userAnswer) {
-        input.classList.add("incorrect");
-        setTimeout(() => input.classList.remove("incorrect"), 500);
-        return;
-    }
-
-    const pattern = gameState.currentQuizPattern;
-    if (!pattern) return;
-
-    const normalizedUser = normalizeAnswer(userAnswer);
-    const isCorrect = pattern.answers.some(ans => normalizeAnswer(ans) === normalizedUser);
-
-    if (isCorrect) {
-        input.classList.add("correct");
-        // 正解処理
-        handleCorrectAnswer(pattern);
-    } else {
-        input.classList.add("incorrect");
-        setTimeout(() => {
-            input.classList.remove("incorrect");
-            input.value = "";
-            input.focus();
-        }, 800);
-        // 不正解のフィードバック
-        showResultModal(false, pattern);
-    }
-}
-
-function handleCorrectAnswer(pattern) {
-    const sectorIndex = gameState.currentSector;
-    if (sectorIndex < TOTAL_SECTORS) {
-        // 通常区画のクリア
-        if (!gameState.clearedSectors.includes(sectorIndex)) {
-            gameState.clearedSectors.push(sectorIndex);
-            gameState.clearedSectors.sort((a, b) => a - b);
-        }
-    } else {
-        // FINALクリア
-        gameState.gamePhase = "completed";
-        gameState.completedAt = new Date().toISOString();
-    }
-
-    gameState.quizInProgress = false;
-    gameState.hintShown = false;
-    saveGameState();
-
-    // クイズモーダルを閉じる
-    $("#quizModal").classList.add("hidden");
-
-    // 結果を表示
-    showResultModal(true, pattern);
-
-    // 完了の場合は完了モーダルを後で表示
-    if (gameState.gamePhase === "completed") {
-        // showResultModalのcloseで完了モーダルを表示する
-    }
-
-    renderAll();
-}
-
-function showResultModal(isCorrect, pattern) {
-    const modal = $("#resultModal");
-    const iconEl = $("#resultModalIcon");
-    const titleEl = $("#resultModalTitle");
-    const subtitleEl = $("#resultModalSubtitle");
-    const content = $("#resultContent");
-
-    if (isCorrect) {
-        iconEl.textContent = "✅";
-        titleEl.textContent = "正解！";
-        titleEl.className = "correct-title";
-        subtitleEl.textContent = "ACCESS GRANTED";
-        content.innerHTML = `
-            <div class="result-emoji">🎉</div>
-            <div class="result-title correct-title">正解！</div>
-            <div class="result-explanation">
-                <div class="result-explanation-label">💡 解説</div>
-                ${escapeHtml(pattern.explanation)}
-            </div>
-        `;
-    } else {
-        iconEl.textContent = "❌";
-        titleEl.textContent = "不正解";
-        titleEl.className = "incorrect-title";
-        subtitleEl.textContent = "ACCESS DENIED";
-        content.innerHTML = `
-            <div class="result-emoji">😤</div>
-            <div class="result-title incorrect-title">不正解</div>
-            <div class="result-explanation">
-                <div class="result-explanation-label">💡 ヒント</div>
-                ${escapeHtml(pattern.hint)}
-            </div>
-            <p style="text-align:center;margin-top:8px;color:var(--text-muted);font-size:0.75rem;">
-                もう一度挑戦してみよう！
-            </p>
-        `;
-    }
-
-    modal.classList.remove("hidden");
-}
-
-function showCompletionModal() {
-    const modal = $("#completionModal");
-    const codeEl = $("#completionCode");
-
-    // クリアコードを生成（チーム名に基づく）
-    const code = generateCompletionCode();
-    codeEl.textContent = code;
-
-    modal.classList.remove("hidden");
-}
-
-function generateCompletionCode() {
-    const base = gameState.teamName.replace(/[^\w]/g, "").toUpperCase();
-    const hash = simpleHash(base + gameState.completedAt);
-    return `JW-${hash.slice(0, 6)}`;
-}
-
-function simpleHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    return Math.abs(hash).toString(36).toUpperCase().padStart(6, "0");
-}
-
-// ==================== 入力正規化関数 ====================
+/* ============================ 3. 入力正規化 ============================ */
+
+/**
+ * 全角/半角、大文字/小文字、前後・内部の空白差を吸収して比較用に正規化する
+ */
 function normalizeAnswer(input) {
-    if (!input) return "";
-    let normalized = input.trim();
-
-    // 全角英数字→半角
-    normalized = normalized.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (char) => {
-        return String.fromCharCode(char.charCodeAt(0) - 0xFEE0);
-    });
-
-    // 全角カタカナ→半角カタカナ（解答はカタカナで扱うため、全角カタカナはそのまま保持）
-    // 小文字→大文字（アルファベットの場合）
-    normalized = normalized.toUpperCase();
-
-    // 全角スペース→半角スペース
-    normalized = normalized.replace(/\u3000/g, " ");
-
-    // 連続スペースを1つに
-    normalized = normalized.replace(/\s+/g, " ");
-
-    // 前後のハイフン・ダッシュ正規化
-    normalized = normalized.replace(/[－—–]/g, "-");
-
-    // 長音記号の正規化（ーと−を統一）
-    normalized = normalized.replace(/[−ー]/g, "ー");
-
-    return normalized;
+  if (input == null) return '';
+  let s = String(input);
+  // 全角英数記号 -> 半角
+  s = s.replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+  // 全角スペース -> 半角スペース
+  s = s.replace(/\u3000/g, ' ');
+  // 前後空白除去
+  s = s.trim();
+  // 内部の空白・中点・ハイフンなど区切り文字を除去（表記ゆらぎ吸収）
+  s = s.replace(/[\s・\-_/]/g, '');
+  // 大文字/小文字統一
+  s = s.toLowerCase();
+  return s;
 }
 
-// ==================== HTMLエスケープ ====================
-function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+function isCorrectAnswer(pattern, rawInput) {
+  const norm = normalizeAnswer(rawInput);
+  if (!norm) return false;
+  return pattern.answers.some((a) => normalizeAnswer(a) === norm);
 }
 
-// ==================== レンダリング ====================
-function renderAll() {
-    renderDashboard();
-    renderSectorCards();
-    renderStatusPanel();
-    renderBriefing();
-    updateActionButtons();
-    updateAdminStatus();
-}
+/* ============================ 4. セキュリティ ============================ */
 
-function renderDashboard() {
-    const dashboard = $("#dashboard");
-    const registrationModal = $("#registrationModal");
-    const lockScreen = $("#lockScreen");
+let securityArmed = false;      // 監視有効フラグ
+let adminActionInProgress = false; // 管理者操作中は監視を一時的に無視
 
-    if (gameState.isLocked) {
-        dashboard.classList.add("hidden");
-        registrationModal.classList.add("hidden");
-        lockScreen.classList.remove("hidden");
-        return;
+function enterFullscreenSafe() {
+  try {
+    const el = document.documentElement;
+    const req =
+      el.requestFullscreen ||
+      el.webkitRequestFullscreen ||
+      el.msRequestFullscreen ||
+      el.mozRequestFullScreen;
+    if (req) {
+      const p = req.call(el);
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => { /* iOS Safari 等 非対応環境はフォールバックして無視 */ });
+      }
     }
-
-    lockScreen.classList.add("hidden");
-
-    if (gameState.gamePhase === "registration") {
-        dashboard.classList.add("hidden");
-        registrationModal.classList.remove("hidden");
-    } else {
-        registrationModal.classList.add("hidden");
-        dashboard.classList.remove("hidden");
-
-        // チーム名表示
-        const teamNameDisplay = $("#teamNameDisplay");
-        if (teamNameDisplay) {
-            teamNameDisplay.textContent = gameState.teamName || "---";
-        }
-    }
+  } catch (e) {
+    /* フルスクリーンAPI非対応環境でも処理を止めない */
+  }
 }
 
-function renderSectorCards() {
-    const container = $("#sectorCards");
-    if (!container) return;
-
-    let html = "";
-
-    SECTOR_POOLS.forEach((sector, index) => {
-        const isCleared = gameState.clearedSectors.includes(index);
-        const isCurrent = gameState.currentSector === index && gameState.gamePhase === "playing";
-        const isUnlocked = isSectorUnlocked(index);
-        const isFinal = index === TOTAL_SECTORS;
-
-        let statusClass = "locked-status";
-        let statusText = "🔒 未解放";
-        let cardClass = "locked";
-
-        if (isCleared) {
-            statusClass = "cleared-status";
-            statusText = "✓ クリア";
-            cardClass = "cleared";
-        } else if (isCurrent && isUnlocked) {
-            statusClass = "active-status";
-            statusText = "● 調査中";
-            cardClass = "active";
-        } else if (isUnlocked) {
-            statusClass = "active-status";
-            statusText = "○ 挑戦可能";
-            cardClass = "";
-        }
-
-        if (isFinal && gameState.clearedSectors.length < TOTAL_SECTORS) {
-            cardClass = "locked";
-            statusClass = "locked-status";
-            statusText = "🔒 未解放";
-        }
-
-        html += `
-            <div class="sector-card ${cardClass}" data-sector-index="${index}">
-                <span class="sector-card-icon">${sector.icon}</span>
-                <span class="sector-card-name">${sector.shortName}</span>
-                <span class="sector-card-area">${sector.areaName}</span>
-                <span class="sector-card-status ${statusClass}">${statusText}</span>
-            </div>
-        `;
-    });
-
-    container.innerHTML = html;
-
-    // カードクリックイベント
-    container.querySelectorAll(".sector-card").forEach(card => {
-        card.addEventListener("click", () => {
-            const index = parseInt(card.dataset.sectorIndex);
-            if (isSectorUnlocked(index) && gameState.gamePhase === "playing" && !gameState.isLocked) {
-                gameState.currentSector = index;
-                gameState.quizInProgress = false;
-                gameState.hintShown = false;
-                saveGameState();
-                renderAll();
-            }
-        });
-    });
+function exitFullscreenSafe() {
+  try {
+    const ex = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (ex && (document.fullscreenElement || document.webkitFullscreenElement)) {
+      const p = ex.call(document);
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
+  } catch (e) { /* noop */ }
 }
 
-function isSectorUnlocked(index) {
-    if (index === 0) return true;
-    if (index < TOTAL_SECTORS) {
-        // 通常区画は前の区画がクリア済みである必要がある
-        return gameState.clearedSectors.includes(index - 1);
-    }
-    if (index === TOTAL_SECTORS) {
-        // FINALは全通常区画クリアが必要
-        return gameState.clearedSectors.length >= TOTAL_SECTORS;
-    }
-    return false;
+function armSecurity() {
+  securityArmed = true;
+}
+function disarmSecurity() {
+  securityArmed = false;
 }
 
-function renderStatusPanel() {
-    const clearedCount = $("#clearedCount");
-    const clueCount = $("#clueCount");
-
-    if (clearedCount) {
-        const count = gameState.clearedSectors.filter(i => i < TOTAL_SECTORS).length;
-        clearedCount.textContent = `${count} / ${TOTAL_SECTORS}`;
-    }
-    if (clueCount) {
-        clueCount.textContent = gameState.clearedSectors.length;
-    }
+function triggerViolation(reason) {
+  if (!securityArmed) return;
+  if (adminActionInProgress) return;
+  if (state.locked) return; // 既にロック中なら重複発火させない
+  state.locked = true;
+  state.lockReason = reason || '不審な操作を検知しました';
+  saveState();
+  showLockScreen();
 }
 
-function renderBriefing() {
-    const content = $("#briefingContent");
-    if (!content) return;
-
-    if (gameState.gamePhase === "playing" && gameState.currentSector !== undefined) {
-        const sector = SECTOR_POOLS[gameState.currentSector];
-        if (sector) {
-            content.textContent = sector.instructions;
-            return;
-        }
+function attachSecurityListeners() {
+  // タブ切り替え・アプリ切り替え検知（Page Visibility API）
+  // ※ ソフトウェアキーボードの開閉やアドレスバー操作は document.hidden を変化させないため誤爆しない
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      triggerViolation('別のタブ／アプリへの切り替えを検知しました (SECURITY VIOLATION)');
     }
+  });
 
-    content.textContent = "システム準備完了。\nチーム登録を行ってください。";
+  // フルスクリーン解除検知
+  const fsHandler = () => {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+    if (!fsEl) {
+      triggerViolation('フルスクリーンモードの解除を検知しました (SECURITY VIOLATION)');
+    }
+  };
+  document.addEventListener('fullscreenchange', fsHandler);
+  document.addEventListener('webkitfullscreenchange', fsHandler);
+  document.addEventListener('MSFullscreenChange', fsHandler);
+
+  // 右クリック禁止
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  // コピー禁止
+  document.addEventListener('copy', (e) => e.preventDefault());
+  document.addEventListener('cut', (e) => e.preventDefault());
+
+  // 開発者ツール・ソース表示等のショートカット禁止
+  document.addEventListener('keydown', (e) => {
+    const k = (e.key || '').toUpperCase();
+    const blocked =
+      k === 'F12' ||
+      (e.ctrlKey && e.shiftKey && ['I', 'J', 'C', 'K'].includes(k)) ||
+      (e.metaKey && e.altKey && ['I', 'J', 'C'].includes(k)) ||
+      (e.ctrlKey && k === 'U') ||
+      (e.ctrlKey && k === 'S') ||
+      (e.ctrlKey && k === 'P');
+    if (blocked) e.preventDefault();
+  });
 }
 
-function updateActionButtons() {
-    const btnPrev = $("#btnPrevSector");
-    const btnNext = $("#btnNextSector");
-    const btnQuiz = $("#btnQuiz");
+/* ============================ 5. 管理者 (ADMIN) ============================ */
 
-    if (!btnPrev || !btnNext || !btnQuiz) return;
+let adminAuthenticated = false;
 
-    const canPrev = gameState.currentSector > 0 && gameState.gamePhase === "playing";
-    const canNext = gameState.currentSector < SECTOR_POOLS.length - 1 &&
-        gameState.gamePhase === "playing" &&
-        (gameState.currentSector < TOTAL_SECTORS ?
-            gameState.clearedSectors.includes(gameState.currentSector) :
-            true);
-
-    btnPrev.disabled = !canPrev;
-    btnNext.disabled = !canNext;
-
-    const sector = SECTOR_POOLS[gameState.currentSector];
-    if (sector && gameState.currentSector < TOTAL_SECTORS && gameState.clearedSectors.includes(gameState.currentSector)) {
-        btnQuiz.textContent = "✅ クリア済み - 確認する";
-        btnQuiz.disabled = false;
-    } else if (sector && gameState.currentSector === TOTAL_SECTORS && gameState.gamePhase === "completed") {
-        btnQuiz.textContent = "🏆 完了！";
-        btnQuiz.disabled = true;
-    } else {
-        btnQuiz.textContent = "クイズに挑戦する ➔";
-        btnQuiz.disabled = gameState.gamePhase !== "playing";
-    }
-}
-
-function updateAdminStatus() {
-    const statusText = $("#adminStatusText");
-    if (!statusText) return;
-
-    if (gameState.isLocked) {
-        statusText.textContent = "🔒 ロック中";
-    } else if (gameState.gamePhase === "registration") {
-        statusText.textContent = "📝 登録待ち";
-    } else if (gameState.gamePhase === "playing") {
-        statusText.textContent = `🎮 プレイ中 (${gameState.teamName})`;
-    } else if (gameState.gamePhase === "completed") {
-        statusText.textContent = "🏆 完了";
-    } else {
-        statusText.textContent = "---";
-    }
-}
-
-// ==================== 管理者機能 ====================
 function openAdminModal() {
-    const modal = $("#adminModal");
-    const actions = $("#adminActions");
-    const passwordSection = $(".admin-password-section");
-    const errorEl = $("#adminError");
-
-    errorEl.classList.add("hidden");
-    $("#adminPassword").value = "";
-
-    if (gameState.adminAuthenticated) {
-        actions.classList.remove("hidden");
-        passwordSection.classList.add("hidden");
-    } else {
-        actions.classList.add("hidden");
-        passwordSection.classList.remove("hidden");
-    }
-
-    updateAdminStatus();
-    modal.classList.remove("hidden");
+  adminAuthenticated = false;
+  const passInput = document.getElementById('admin-passcode-input');
+  const authPanel = document.getElementById('admin-auth-panel');
+  const actionPanel = document.getElementById('admin-action-panel');
+  const errorEl = document.getElementById('admin-auth-error');
+  if (passInput) passInput.value = '';
+  if (errorEl) errorEl.textContent = '';
+  if (authPanel) authPanel.classList.remove('hidden');
+  if (actionPanel) actionPanel.classList.add('hidden');
+  document.getElementById('modal-admin').classList.add('active');
+  if (passInput) setTimeout(() => passInput.focus(), 50);
 }
 
 function closeAdminModal() {
-    $("#adminModal").classList.add("hidden");
-    gameState.adminAuthenticated = false;
-    $("#adminActions").classList.add("hidden");
-    $(".admin-password-section").classList.remove("hidden");
-    $("#adminError").classList.add("hidden");
+  document.getElementById('modal-admin').classList.remove('active');
 }
 
-function handleAdminLogin() {
-    const input = $("#adminPassword");
-    const errorEl = $("#adminError");
-    const password = input.value.trim();
-
-    if (password === ADMIN_PASSWORD) {
-        gameState.adminAuthenticated = true;
-        errorEl.classList.add("hidden");
-        $(".admin-password-section").classList.add("hidden");
-        $("#adminActions").classList.remove("hidden");
-        updateAdminStatus();
-    } else {
-        errorEl.classList.remove("hidden");
-        input.value = "";
-        input.focus();
-    }
+function submitAdminPasscode() {
+  const passInput = document.getElementById('admin-passcode-input');
+  const errorEl = document.getElementById('admin-auth-error');
+  const val = passInput ? passInput.value : '';
+  if (val === CONFIG.ADMIN_PASSCODE) {
+    adminAuthenticated = true;
+    document.getElementById('admin-auth-panel').classList.add('hidden');
+    document.getElementById('admin-action-panel').classList.remove('hidden');
+    if (errorEl) errorEl.textContent = '';
+  } else {
+    if (errorEl) errorEl.textContent = '❌ パスコードが正しくありません。';
+  }
 }
 
-function handleAdminUnlock() {
-    if (!gameState.adminAuthenticated) return;
-
-    if (gameState.isLocked) {
-        hideLockScreen();
-        closeAdminModal();
-    } else {
-        alert("現在ロックされていません。");
-    }
+function adminUnlock() {
+  adminActionInProgress = true;
+  state.locked = false;
+  state.lockReason = '';
+  saveState();
+  hideLockScreen();
+  closeAdminModal();
+  // 再度フルスクリーンへの復帰を試みる（ユーザー操作起点なので許可されやすい）
+  enterFullscreenSafe();
+  setTimeout(() => { adminActionInProgress = false; }, 800);
 }
 
-function handleAdminReset() {
-    if (!gameState.adminAuthenticated) return;
-
-    // 確認ダイアログを表示
-    const confirmModal = $("#confirmModal");
-    const confirmMessage = $("#confirmMessage");
-    confirmMessage.textContent = "端末を初期化します。\nすべてのデータが消去され、次のチームが登録できる状態になります。\n\n本当に実行しますか？";
-    confirmModal.classList.remove("hidden");
-
-    // 確認ダイアログのOKボタンに処理を設定
-    window._pendingConfirmAction = "reset";
+function adminResetDevice() {
+  const ok = window.confirm('端末を初期化し、次のチーム用の登録画面に戻します。よろしいですか？\n（現在の進行データは完全に削除されます）');
+  if (!ok) return;
+  adminActionInProgress = true;
+  clearState();
+  hideLockScreen();
+  closeAdminModal();
+  disarmSecurity();
+  exitFullscreenSafe();
+  showScreen('registration');
+  setTimeout(() => { adminActionInProgress = false; }, 800);
 }
 
-function handleConfirmOK() {
-    const action = window._pendingConfirmAction;
-    if (action === "reset") {
-        clearGameState();
-        exitFullscreen();
-        closeAdminModal();
-        $("#confirmModal").classList.add("hidden");
-        // すべてのモーダルを閉じる
-        $$(".modal-overlay").forEach(m => m.classList.add("hidden"));
-        $("#lockScreen").classList.add("hidden");
+/* ============================ 6. UI描画・画面制御 ============================ */
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
+  const target = document.getElementById(`screen-${name}`);
+  if (target) target.classList.add('active');
+}
+
+function showLockScreen() {
+  document.getElementById('lock-screen').classList.add('active');
+  document.getElementById('lock-reason-text').textContent = state.lockReason || '不審な操作を検知しました';
+  document.body.classList.add('is-locked');
+}
+
+function hideLockScreen() {
+  document.getElementById('lock-screen').classList.remove('active');
+  document.body.classList.remove('is-locked');
+}
+
+function maxViewIndex() {
+  if (state.clearedSectors >= CONFIG.SECTOR_COUNT) return 4; // FINAL閲覧可
+  return Math.min(state.clearedSectors, CONFIG.SECTOR_COUNT - 1);
+}
+
+function getSectorForIndex(idx) {
+  return idx >= CONFIG.SECTOR_COUNT ? FINAL_SECTOR : SECTOR_POOLS[idx];
+}
+
+function renderTeamName() {
+  const el = document.getElementById('team-name-display');
+  if (el) el.textContent = state.teamName || '---';
+}
+
+function renderBriefingPanel() {
+  const sector = getSectorForIndex(viewIndex);
+  document.getElementById('briefing-sector-name').textContent = `${sector.icon} ${sector.areaName}｜${sector.shortName}`;
+  document.getElementById('briefing-location').textContent = `📍 ${sector.location}`;
+  const isLocked = viewIndex > maxViewIndex();
+  const textEl = document.getElementById('briefing-text');
+  if (isLocked) {
+    textEl.textContent = '🔒 この区画はまだ未解放です。前の区画をクリアすると指示書が表示されます。';
+  } else if (viewIndex === 4) {
+    textEl.textContent = FINAL_SECTOR.instructions;
+  } else {
+    textEl.textContent = sector.instructions;
+  }
+}
+
+function renderStatusPanel() {
+  document.getElementById('status-count-text').textContent = `${state.clearedSectors} / ${CONFIG.SECTOR_COUNT}`;
+  const bar = document.getElementById('status-progress-bar');
+  if (bar) bar.style.width = `${(state.clearedSectors / CONFIG.SECTOR_COUNT) * 100}%`;
+
+  const cluesList = document.getElementById('clues-list');
+  cluesList.innerHTML = '';
+  if (state.clues.length === 0) {
+    cluesList.innerHTML = '<li class="clue-empty">まだ手がかりは発見されていません</li>';
+  } else {
+    state.clues.forEach((c) => {
+      const li = document.createElement('li');
+      li.className = 'clue-item';
+      li.innerHTML = `<span class="clue-sector">${c.sectorName}</span><span class="clue-code">${c.code}</span>`;
+      cluesList.appendChild(li);
+    });
+  }
+}
+
+function sectorCardStateClass(idx) {
+  if (idx < state.clearedSectors) return 'cleared';
+  if (idx === state.clearedSectors && state.clearedSectors < CONFIG.SECTOR_COUNT) return 'active';
+  return 'locked';
+}
+
+function renderSectorCards() {
+  const container = document.getElementById('sector-cards');
+  container.innerHTML = '';
+
+  SECTOR_POOLS.forEach((sector, idx) => {
+    const st = sectorCardStateClass(idx);
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = `sector-card ${st} ${idx === viewIndex ? 'is-viewing' : ''}`;
+    card.setAttribute('data-idx', idx);
+    let badge = '';
+    if (st === 'cleared') badge = '<span class="badge badge-cleared">✓ クリア</span>';
+    else if (st === 'active') badge = '<span class="badge badge-active">調査中</span>';
+    else badge = '<span class="badge badge-locked">🔒 未解放</span>';
+
+    card.innerHTML = `
+      <div class="sector-card-icon">${sector.icon}</div>
+      <div class="sector-card-name">${sector.shortName}</div>
+      <div class="sector-card-area">${sector.areaName}</div>
+      ${badge}
+    `;
+    card.addEventListener('click', () => {
+      if (idx <= maxViewIndex()) {
+        viewIndex = idx;
         renderAll();
+      }
+    });
+    container.appendChild(card);
+  });
+
+  // FINALカード
+  const finalSt = state.finalCleared ? 'cleared' : state.clearedSectors >= CONFIG.SECTOR_COUNT ? 'active' : 'locked';
+  const finalCard = document.createElement('button');
+  finalCard.type = 'button';
+  finalCard.className = `sector-card final-card ${finalSt} ${viewIndex === 4 ? 'is-viewing' : ''}`;
+  let finalBadge = '';
+  if (finalSt === 'cleared') finalBadge = '<span class="badge badge-cleared">✓ 完了</span>';
+  else if (finalSt === 'active') finalBadge = '<span class="badge badge-active">起動可能</span>';
+  else finalBadge = '<span class="badge badge-locked">🔒 未解放</span>';
+  finalCard.innerHTML = `
+    <div class="sector-card-icon">${FINAL_SECTOR.icon}</div>
+    <div class="sector-card-name">${FINAL_SECTOR.shortName}</div>
+    <div class="sector-card-area">${FINAL_SECTOR.areaName}</div>
+    ${finalBadge}
+  `;
+  finalCard.addEventListener('click', () => {
+    if (state.clearedSectors >= CONFIG.SECTOR_COUNT) {
+      viewIndex = 4;
+      renderAll();
     }
-    window._pendingConfirmAction = null;
+  });
+  container.appendChild(finalCard);
 }
 
-// ==================== 画面サイズチェック ====================
-function checkScreenSize() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    if (width < 300 || height < 400) {
-        console.warn("Screen size too small for optimal experience");
+function renderActionBar() {
+  const prevBtn = document.getElementById('btn-prev');
+  const nextBtn = document.getElementById('btn-next');
+  const quizBtn = document.getElementById('btn-quiz');
+
+  prevBtn.disabled = viewIndex <= 0;
+  nextBtn.disabled = viewIndex >= maxViewIndex();
+
+  quizBtn.classList.remove('btn-disabled');
+  if (viewIndex === 4) {
+    if (state.finalCleared) {
+      quizBtn.textContent = '✅ ミッションコンプリート';
+      quizBtn.disabled = true;
+    } else if (state.clearedSectors >= CONFIG.SECTOR_COUNT) {
+      quizBtn.textContent = '🚨 起動コードを入力する ➔';
+      quizBtn.disabled = false;
+    } else {
+      quizBtn.textContent = '🔒 未解放';
+      quizBtn.disabled = true;
     }
+  } else if (viewIndex < state.clearedSectors) {
+    quizBtn.textContent = '📖 解説を見る（クリア済み）';
+    quizBtn.disabled = false;
+  } else if (viewIndex === state.clearedSectors) {
+    quizBtn.textContent = 'クイズに挑戦する ➔';
+    quizBtn.disabled = false;
+  } else {
+    quizBtn.textContent = '🔒 未解放';
+    quizBtn.disabled = true;
+  }
 }
 
-window.addEventListener("resize", checkScreenSize);
+function renderAll() {
+  renderTeamName();
+  renderBriefingPanel();
+  renderStatusPanel();
+  renderSectorCards();
+  renderActionBar();
+}
 
-// ==================== 初期レンダリング ====================
-renderAll();
+/* -------- クイズモーダル -------- */
 
-// ==================== エクスポート（デバッグ用） ====================
-if (typeof module !== "undefined" && module.exports) {
-    module.exports = {
-        SECTOR_POOLS,
-        normalizeAnswer,
-        ADMIN_PASSWORD,
-        TOTAL_SECTORS,
+function openQuizModal() {
+  if (viewIndex === 4) {
+    openFinalModal();
+    return;
+  }
+  const idx = viewIndex;
+  const isReview = idx < state.clearedSectors;
+  const sector = SECTOR_POOLS[idx];
+  const patternIdx = state.selectedPatterns[idx];
+  const pattern = sector.patterns[patternIdx];
+
+  document.getElementById('quiz-modal-title').textContent = pattern.title;
+  document.getElementById('quiz-modal-question').textContent = pattern.question;
+  document.getElementById('quiz-answer-input').value = '';
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-feedback').className = 'quiz-feedback';
+  document.getElementById('quiz-hint-box').classList.add('hidden');
+  document.getElementById('quiz-hint-box').textContent = pattern.hint;
+  document.getElementById('quiz-explanation-box').classList.add('hidden');
+  document.getElementById('quiz-explanation-box').textContent = pattern.explanation;
+
+  const submitBtn = document.getElementById('btn-quiz-submit');
+  const hintBtn = document.getElementById('btn-quiz-hint');
+  const answerInput = document.getElementById('quiz-answer-input');
+  const closeReviewBtn = document.getElementById('btn-quiz-close-review');
+
+  if (isReview) {
+    submitBtn.classList.add('hidden');
+    hintBtn.classList.add('hidden');
+    answerInput.classList.add('hidden');
+    closeReviewBtn.classList.remove('hidden');
+    document.getElementById('quiz-feedback').textContent = '✅ この区画はクリア済みです。解説を確認できます。';
+    document.getElementById('quiz-feedback').className = 'quiz-feedback feedback-correct';
+    document.getElementById('quiz-explanation-box').classList.remove('hidden');
+  } else {
+    submitBtn.classList.remove('hidden');
+    hintBtn.classList.remove('hidden');
+    answerInput.classList.remove('hidden');
+    closeReviewBtn.classList.add('hidden');
+    if (state.wrongAttempts[idx] >= 2) {
+      document.getElementById('quiz-hint-box').classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('modal-quiz').classList.add('active');
+  if (!isReview) setTimeout(() => answerInput.focus(), 50);
+}
+
+function closeQuizModal() {
+  document.getElementById('modal-quiz').classList.remove('active');
+}
+
+function submitQuizAnswer() {
+  const idx = viewIndex;
+  const sector = SECTOR_POOLS[idx];
+  const patternIdx = state.selectedPatterns[idx];
+  const pattern = sector.patterns[patternIdx];
+  const input = document.getElementById('quiz-answer-input').value;
+  const feedbackEl = document.getElementById('quiz-feedback');
+
+  if (isCorrectAnswer(pattern, input)) {
+    state.clearedSectors += 1;
+    state.wrongAttempts[idx] = 0;
+    state.clues.push({ sectorName: sector.shortName, code: pattern.clueCode });
+    saveState();
+
+    feedbackEl.textContent = `🎉 正解！ 起動コード欠片 [${pattern.clueCode}] を入手した。`;
+    feedbackEl.className = 'quiz-feedback feedback-correct';
+    document.getElementById('quiz-explanation-box').classList.remove('hidden');
+    document.getElementById('btn-quiz-submit').classList.add('hidden');
+    document.getElementById('btn-quiz-hint').classList.add('hidden');
+    document.getElementById('quiz-answer-input').classList.add('hidden');
+    document.getElementById('btn-quiz-close-review').classList.remove('hidden');
+    document.getElementById('btn-quiz-close-review').textContent = '次の区画へ進む ➔';
+
+    document.getElementById('btn-quiz-close-review').onclick = () => {
+      closeQuizModal();
+      viewIndex = maxViewIndex();
+      renderAll();
+      document.getElementById('btn-quiz-close-review').textContent = '閉じる';
+      document.getElementById('btn-quiz-close-review').onclick = closeQuizModal;
     };
+  } else {
+    state.wrongAttempts[idx] += 1;
+    saveState();
+    feedbackEl.textContent = '❌ 不正解…もう一度データを確認せよ。';
+    feedbackEl.className = 'quiz-feedback feedback-wrong';
+    if (state.wrongAttempts[idx] >= 2) {
+      document.getElementById('quiz-hint-box').classList.remove('hidden');
+    }
+  }
 }
+
+/* -------- FINALモーダル -------- */
+
+function openFinalModal() {
+  document.getElementById('final-clue-list').innerHTML = state.clues
+    .map((c) => `<span class="final-clue-chip">${c.sectorName}: <b>${c.code}</b></span>`)
+    .join('');
+  document.getElementById('final-answer-input').value = '';
+  document.getElementById('final-feedback').textContent = '';
+  document.getElementById('final-feedback').className = 'quiz-feedback';
+  document.getElementById('modal-final').classList.add('active');
+  setTimeout(() => document.getElementById('final-answer-input').focus(), 50);
+}
+
+function closeFinalModal() {
+  document.getElementById('modal-final').classList.remove('active');
+}
+
+function submitFinalAnswer() {
+  const expected = state.clues.map((c) => c.code).join('');
+  const input = document.getElementById('final-answer-input').value;
+  const feedbackEl = document.getElementById('final-feedback');
+
+  if (normalizeAnswer(input) === normalizeAnswer(expected)) {
+    state.finalCleared = true;
+    state.completedAt = Date.now();
+    saveState();
+    closeFinalModal();
+    renderCompleteScreen();
+    showScreen('complete');
+    disarmSecurity();
+  } else {
+    feedbackEl.textContent = '❌ コードが一致しません。手がかりの並び順を確認せよ。';
+    feedbackEl.className = 'quiz-feedback feedback-wrong';
+  }
+}
+
+/* -------- 完了画面 -------- */
+
+function formatDuration(ms) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}分${String(s).padStart(2, '0')}秒`;
+}
+
+function renderCompleteScreen() {
+  document.getElementById('complete-team-name').textContent = state.teamName;
+  const duration = state.completedAt && state.createdAt ? state.completedAt - state.createdAt : 0;
+  document.getElementById('complete-duration').textContent = formatDuration(duration);
+  document.getElementById('complete-code').textContent = state.clues.map((c) => c.code).join('-');
+  const listEl = document.getElementById('complete-clue-list');
+  listEl.innerHTML = state.clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
+}
+
+/* -------- 遊び方 / 注意事項モーダル -------- */
+
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+/* -------- 登録画面 -------- */
+
+function handleStartTeam() {
+  const input = document.getElementById('team-name-input');
+  const errorEl = document.getElementById('registration-error');
+  const name = (input.value || '').trim();
+  if (!name) {
+    errorEl.textContent = '⚠️ チーム名を入力してください。';
+    return;
+  }
+  errorEl.textContent = '';
+
+  state = createDefaultState();
+  state.teamName = name;
+  state.createdAt = Date.now();
+  state.selectedPatterns = SECTOR_POOLS.map((sector) => Math.floor(Math.random() * sector.patterns.length));
+  saveState();
+
+  viewIndex = 0;
+  showScreen('dashboard');
+  renderAll();
+
+  // 登録ボタン押下は正規のユーザー操作なので、ここでフルスクリーンをリクエストする
+  enterFullscreenSafe();
+  armSecurity();
+}
+
+/* -------- 再開オーバーレイ（リロード復帰時） -------- */
+
+function showResumeOverlay() {
+  document.getElementById('resume-overlay').classList.add('active');
+}
+function hideResumeOverlay() {
+  document.getElementById('resume-overlay').classList.remove('active');
+}
+
+/* ============================ 7. 初期化 / イベントバインド ============================ */
+
+function bindEvents() {
+  // 登録画面
+  document.getElementById('btn-start-team').addEventListener('click', handleStartTeam);
+  document.getElementById('team-name-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleStartTeam();
+  });
+
+  // トップバー
+  document.getElementById('btn-howto').addEventListener('click', () => openModal('modal-howto'));
+  document.getElementById('btn-notice').addEventListener('click', () => openModal('modal-notice'));
+  document.getElementById('btn-howto-close').addEventListener('click', () => closeModal('modal-howto'));
+  document.getElementById('btn-notice-close').addEventListener('click', () => closeModal('modal-notice'));
+
+  // アクションバー
+  document.getElementById('btn-prev').addEventListener('click', () => {
+    if (viewIndex > 0) {
+      viewIndex -= 1;
+      renderAll();
+    }
+  });
+  document.getElementById('btn-next').addEventListener('click', () => {
+    if (viewIndex < maxViewIndex()) {
+      viewIndex += 1;
+      renderAll();
+    }
+  });
+  document.getElementById('btn-quiz').addEventListener('click', openQuizModal);
+
+  // クイズモーダル
+  document.getElementById('btn-quiz-submit').addEventListener('click', submitQuizAnswer);
+  document.getElementById('quiz-answer-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitQuizAnswer();
+  });
+  document.getElementById('btn-quiz-hint').addEventListener('click', () => {
+    document.getElementById('quiz-hint-box').classList.remove('hidden');
+  });
+  document.getElementById('btn-quiz-close').addEventListener('click', closeQuizModal);
+  document.getElementById('btn-quiz-close-review').addEventListener('click', closeQuizModal);
+
+  // FINALモーダル
+  document.getElementById('btn-final-submit').addEventListener('click', submitFinalAnswer);
+  document.getElementById('final-answer-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitFinalAnswer();
+  });
+  document.getElementById('btn-final-close').addEventListener('click', closeFinalModal);
+
+  // ADMIN
+  document.getElementById('btn-admin-fixed').addEventListener('click', openAdminModal);
+  document.getElementById('btn-admin-close').addEventListener('click', closeAdminModal);
+  document.getElementById('btn-admin-auth-submit').addEventListener('click', submitAdminPasscode);
+  document.getElementById('admin-passcode-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitAdminPasscode();
+  });
+  document.getElementById('btn-admin-unlock').addEventListener('click', adminUnlock);
+  document.getElementById('btn-admin-reset').addEventListener('click', adminResetDevice);
+
+  // 再開オーバーレイ
+  document.getElementById('btn-resume').addEventListener('click', () => {
+    enterFullscreenSafe();
+    armSecurity();
+    hideResumeOverlay();
+  });
+
+  // モーダル背景クリックで閉じる（ADMIN・ロック画面は除く誤操作防止のため対象外）
+  document.querySelectorAll('.modal-overlay[data-dismissible="true"]').forEach((overlay) => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('active');
+    });
+  });
+}
+
+function init() {
+  attachSecurityListeners();
+  bindEvents();
+
+  state = loadState();
+
+  if (state.teamName && state.completedAt) {
+    // 完了済み：復帰
+    showScreen('complete');
+    renderCompleteScreen();
+  } else if (state.teamName) {
+    // 進行中：復帰
+    viewIndex = maxViewIndex();
+    showScreen('dashboard');
+    renderAll();
+    if (state.locked) {
+      showLockScreen();
+      armSecurity();
+    } else {
+      showResumeOverlay();
+    }
+  } else {
+    // 未登録：登録画面
+    showScreen('registration');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
