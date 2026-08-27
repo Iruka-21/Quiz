@@ -7,8 +7,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-    <title>JURASSIC RESEARCH SYSTEM - LOCKED TERMINAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JURASSIC RESEARCH SYSTEM</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,18 +20,18 @@
             <h1>🦖 JURASSIC LAB</h1>
         </div>
         <div class="header-status-area">
-            <span class="lock-indicator" id="lockIndicator">🔒 LOCKED MODE</span>
+            <span class="lock-indicator" id="lockIndicator">🔒 LOCKED</span>
             <div class="header-team-badge" id="teamBadge">TEAM: ---</div>
         </div>
     </header>
 
     <!-- 状況ステータスバー -->
     <div class="status-banner" id="statusBar">
-        <span id="systemStatusText">SYSTEM: ACTIVE INVESTIGATION</span>
+        <span id="systemStatusText">ISLA NUBLAR RESEARCH TERMINAL</span>
         <span id="progressCount">0 / 5 CLEARED</span>
     </div>
 
-    <!-- 区画ナビゲーション -->
+    <!-- 区画ナビゲーション（問題を解かないと先へ進めない） -->
     <nav class="progress-nav" id="sectorNav"></nav>
 
     <!-- メインコンテンツ -->
@@ -39,7 +39,7 @@
 
     <!-- フッター -->
     <footer class="system-footer">
-        <span>ISLA NUBLAR TERMINAL SECURITY PROTOCOL</span>
+        <span>SECURITY LEVEL: RESTRICTED</span>
         <button class="btn-admin-trigger" onclick="openAdminModal()">⚙️ ADMIN</button>
     </footer>
 </div>
@@ -48,16 +48,16 @@
 <div class="security-lock-screen" id="securityLockScreen">
     <div class="security-card">
         <div class="alarm-icon">🚨</div>
-        <h2 class="alarm-title">SECURITY PROTOCOL VIOLATION</h2>
+        <h2 class="alarm-title">SECURITY VIOLATION</h2>
         <div class="alarm-subtitle">【 端末緊急ロック発動 】</div>
         <p class="alarm-text">
-            画面の離脱、タブの切り替え、または不正な操作を検知しました。<br>
-            セキュリティ保護のため、本調査端末はロックされました。
+            別タブの閲覧、画面の離脱、または不正操作を検知しました。<br>
+            セキュリティプロトコルにより端末操作が制限されました。
         </p>
         <div class="alarm-guide">
-            ※近くの巡回スタッフまたは本部受付へ本画面を提示し、解除を要請してください。
+            ※巡回スタッフまたは本部受付に本画面を提示し、ロック解除を依頼してください。
         </div>
-        <button class="btn-admin-emergency" onclick="openAdminModal()">⚙️ スタッフ専用解除認証</button>
+        <button class="btn-admin-emergency" onclick="openAdminModal()">⚙️ スタッフ専用解除</button>
     </div>
 </div>
 
@@ -81,9 +81,9 @@
         <div id="adminErrorMsg" class="error-alert" style="margin-bottom: 14px;">⚠ パスコードが一致しません</div>
         
         <div class="admin-actions">
-            <button class="btn-action btn-cancel" onclick="closeAdminModal()">キャンセル</button>
+            <button class="btn-action btn-cancel" onclick="closeAdminModal()">閉じる</button>
             <button class="btn-action btn-resume-game" onclick="verifyAdmin('resume')">ロック解除 (再開)</button>
-            <button class="btn-action btn-reset-game" onclick="verifyAdmin('reset')">端末初期化 (終了)</button>
+            <button class="btn-action btn-reset-game" onclick="verifyAdmin('reset')">端末初期化 (次へ)</button>
         </div>
     </div>
 </div>
