@@ -822,3 +822,24 @@ input {
   background: #fff;
   padding: 6px;
 }
+/* ============================================================
+   追加：QRコードグリッド / スコア強調
+   ============================================================ */
+#btn-download-result {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#btn-download-result:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.7) !important;
+}
+#qr-page-url img, #qr-column-url img {
+  border-radius: 8px;
+  background: #fff;
+  padding: 4px;
+  width: 100px;
+  height: 100px;
+}
+/* スコア表示の強調 */
+#complete-score {
+  letter-spacing: 2px;
+}
