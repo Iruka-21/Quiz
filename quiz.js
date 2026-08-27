@@ -1,6 +1,6 @@
 /* =========================================================================
    ISLA NUBLAR RESEARCH LAB — QUIZ EXPEDITION
-   quiz.js (完全版・QR白黒対応)
+   quiz.js (QRコードにデータ埋め込み版)
    ========================================================================= */
 
 /* ============================== 1. CONFIG =============================== */
@@ -694,7 +694,7 @@ function calculateScore(ms) {
   return 5000;
 }
 
-/* ============================ 完了画面（スコア・QR白黒・DL） ============================ */
+/* ============================ 完了画面（スコア・QRデータ埋め込み） ============================ */
 
 function formatDuration(ms) {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -704,34 +704,45 @@ function formatDuration(ms) {
 }
 
 function renderCompleteScreen() {
-  document.getElementById('complete-team-name').textContent = state.teamName;
+  // データが state にない場合は何もしない
+  if (!state.teamName) return;
+
   const duration = state.completedAt && state.createdAt ? state.completedAt - state.createdAt : 0;
   const score = calculateScore(duration);
 
+  document.getElementById('complete-team-name').textContent = state.teamName;
   document.getElementById('complete-duration').textContent = formatDuration(duration);
   document.getElementById('complete-score').textContent = score.toLocaleString() + ' pt';
   document.getElementById('complete-code').textContent = state.clues.map((c) => c.code).join(' - ');
   const listEl = document.getElementById('complete-clue-list');
   listEl.innerHTML = state.clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
 
-  // ★ 1. ページURLのQRコード（白黒）
+  // ★★★ QRコード用URLを生成（データをクエリパラメータに埋め込む） ★★★
+  const baseUrl = window.location.origin + window.location.pathname;
+  const params = new URLSearchParams();
+  params.set('qr', '1');
+  params.set('team', state.teamName);
+  params.set('duration_ms', String(duration));
+  params.set('clues', JSON.stringify(state.clues));
+  const qrUrl = baseUrl + '?' + params.toString();
+
+  // ページURL用QRコード（結果データを埋め込んだURL）
   const pageContainer = document.getElementById('qr-page-url');
   pageContainer.innerHTML = '';
   try {
-    const pageUrl = window.location.href;
     new QRCode(pageContainer, {
-      text: pageUrl,
+      text: qrUrl,
       width: 100,
       height: 100,
-      colorDark: '#000000',   // ★ 黒
-      colorLight: '#ffffff',  // ★ 白
+      colorDark: '#000000',
+      colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.H,
     });
   } catch (e) {
     pageContainer.innerHTML = '<p style="font-size:11px;color:var(--c-text-dim);">QR生成エラー</p>';
   }
 
-  // ★ 2. コラムURLのQRコード（白黒）
+  // コラムURL用QRコード（固定）
   const columnContainer = document.getElementById('qr-column-url');
   columnContainer.innerHTML = '';
   try {
@@ -740,16 +751,22 @@ function renderCompleteScreen() {
       text: columnUrl,
       width: 100,
       height: 100,
-      colorDark: '#000000',   // ★ 黒
-      colorLight: '#ffffff',  // ★ 白
+      colorDark: '#000000',
+      colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.H,
     });
   } catch (e) {
     columnContainer.innerHTML = '<p style="font-size:11px;color:var(--c-text-dim);">QR生成エラー</p>';
   }
+
+  // スマホからのアクセスかどうかを表示（任意）
+  const isQR = new URLSearchParams(window.location.search).get('qr') === '1';
+  if (isQR) {
+    document.getElementById('complete-sub').textContent = '📱 スマートフォンからアクセス中 — 画像をダウンロードして保存してください。';
+  }
 }
 
-/* ============================ 画像ダウンロード（スコア＋白黒QR） ============================ */
+/* ============================ 画像ダウンロード ============================ */
 
 function downloadResultImage() {
   const team = state.teamName || 'Unknown';
@@ -763,19 +780,16 @@ function downloadResultImage() {
   canvas.height = h;
   const ctx = canvas.getContext('2d');
 
-  // 背景
   const grad = ctx.createLinearGradient(0, 0, w, h);
   grad.addColorStop(0, '#04080b');
   grad.addColorStop(1, '#0d1b24');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
-  // 枠
   ctx.strokeStyle = '#2bf078';
   ctx.lineWidth = 6;
   ctx.strokeRect(15, 15, w - 30, h - 30);
 
-  // タイトル
   ctx.fillStyle = '#2bf078';
   ctx.font = 'bold 34px Orbitron, sans-serif';
   ctx.textAlign = 'left';
@@ -784,36 +798,30 @@ function downloadResultImage() {
   ctx.fillStyle = '#f59e0b';
   ctx.fillText('EXPEDITION COMPLETE', 40, 120);
 
-  // チーム名
   ctx.fillStyle = '#d7ece4';
   ctx.font = '28px Noto Sans JP, sans-serif';
   ctx.fillText('TEAM: ' + team, 40, 190);
 
-  // スコア
   ctx.fillStyle = '#f59e0b';
   ctx.font = 'bold 30px Orbitron, sans-serif';
   ctx.fillText('🏅 SCORE: ' + scoreText, 40, 260);
 
-  // 所要時間
   ctx.fillStyle = '#8fa8ab';
   ctx.font = '18px Noto Sans JP, sans-serif';
   ctx.fillText('⏱ Time: ' + duration, 40, 310);
 
-  // コード
   ctx.fillStyle = '#38bdf8';
   ctx.font = 'bold 28px Orbitron, sans-serif';
   ctx.fillText('CODE: ' + code, 40, 380);
 
-  // フッター
   ctx.fillStyle = '#8fa8ab';
   ctx.font = '16px Noto Sans JP, sans-serif';
   ctx.fillText('© ISLA NUBLAR RESEARCH LAB', 40, h - 30);
 
-  // ★ コラムQRコード（白黒）を画像に埋め込み
+  // コラムQRコード（白黒）
   const columnUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
   const qrImg = new Image();
   qrImg.crossOrigin = 'Anonymous';
-  // color=000000 で黒、bgcolor=ffffff で白背景
   qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&bgcolor=ffffff&color=000000&data=' + encodeURIComponent(columnUrl);
   
   qrImg.onload = function() {
@@ -825,7 +833,6 @@ function downloadResultImage() {
     downloadCanvas(canvas, team);
   };
   qrImg.onerror = function() {
-    // QRが読み込めなくても画像はダウンロード
     ctx.fillStyle = '#8fa8ab';
     ctx.font = '16px Noto Sans JP, sans-serif';
     ctx.textAlign = 'center';
@@ -924,6 +931,27 @@ function bindEvents() {
 function init() {
   attachSecurityListeners();
   bindEvents();
+
+  // ★★★ URLパラメータをチェック（QRコード経由のアクセス） ★★★
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('qr') === '1') {
+    // QRコードからのアクセス → stateをパラメータで復元
+    state = createDefaultState();
+    state.teamName = params.get('team') || 'Unknown';
+    state.createdAt = Date.now() - parseInt(params.get('duration_ms') || 0);
+    state.completedAt = Date.now();
+    state.clearedSectors = 4;
+    state.finalCleared = true;
+    state.clues = JSON.parse(params.get('clues') || '[]');
+    state.selectedPatterns = [0, 0, 0, 0]; // ダミー（表示には影響なし）
+    
+    showScreen('complete');
+    renderCompleteScreen();
+    disarmSecurity(); // スマホでロック監視は不要
+    return;
+  }
+
+  // 通常のタブレット用起動処理
   state = loadState();
   if (state.teamName && state.completedAt) {
     showScreen('complete');
