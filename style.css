@@ -25,7 +25,7 @@ body {
     background-color: var(--bg-dark);
     color: var(--text-main);
     min-height: 100vh;
-    padding: 12px;
+    padding: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -130,6 +130,7 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 4px;
+    cursor: pointer;
 }
 .nav-item:last-child { border-right: none; }
 
@@ -144,10 +145,10 @@ body {
     cursor: not-allowed;
 }
 
-/* メインエリア */
+/* メインコンテンツエリア */
 .main-content {
     padding: 24px;
-    min-height: 480px;
+    min-height: 420px;
     display: flex;
     flex-direction: column;
 }
@@ -155,7 +156,7 @@ body {
 /* チーム登録初期画面 */
 .setup-screen {
     text-align: center;
-    padding: 40px 20px;
+    padding: 30px 10px;
     margin: auto;
     max-width: 520px;
     width: 100%;
@@ -337,7 +338,7 @@ summary {
     color: #cbd5e1;
 }
 
-/* フッター & 管理者ボタン */
+/* フッター */
 .system-footer {
     background: #040609;
     border-top: 1px solid var(--panel-border);
@@ -395,68 +396,4 @@ summary {
     background: rgba(239, 68, 68, 0.15);
     border: 1px dashed var(--jurassic-red);
     border-radius: 8px;
-    padding: 12px;
-    font-size: 0.85rem;
-    color: #fca5a5;
-    margin-bottom: 24px;
-}
-
-.btn-admin-emergency {
-    background: transparent;
-    border: 1px solid #475569;
-    color: #94a3b8;
-    padding: 10px 18px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
-}
-.btn-admin-emergency:hover { color: var(--jurassic-amber); border-color: var(--jurassic-amber); }
-
-/* モーダル共通 */
-.modal-layer {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.88);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    z-index: 100000;
-}
-
-.modal-card {
-    background: #101620;
-    border: 2px solid var(--jurassic-green);
-    border-radius: 16px;
-    padding: 30px;
-    max-width: 520px;
-    width: 100%;
-    text-align: center;
-}
-
-.modal-card.admin-card { border-color: var(--jurassic-amber); }
-.modal-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 12px; }
-.modal-desc { font-size: 1rem; line-height: 1.7; color: #cbd5e1; margin-bottom: 20px; }
-
-.admin-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.admin-actions .btn-cancel {
-    grid-column: span 2;
-    background: #1e293b;
-    color: #cbd5e1;
-}
-
-.btn-action {
-    padding: 14px;
-    border-radius: 8px;
-    border: none;
-    font-weight: bold;
-    font-size: 0.95rem;
-    cursor: pointer;
-}
-.btn-resume-game { background: var(--jurassic-green); color: #000; }
-.btn-reset-game { background: var(--jurassic-red); color: #fff; }
+    padding: 1
