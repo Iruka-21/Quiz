@@ -1,7 +1,7 @@
 /* ==========================================================
-   🔑 セキュリティ設定
+   🔑 管理者パスコード
 ========================================================== */
-const ADMIN_PASSWORD = "admin"; // 管理者解除パスコード
+const ADMIN_PASSWORD = "admin";
 
 /* ==========================================================
    🟩 問題データ設定エリア 🟩
@@ -14,7 +14,7 @@ const SECTORS = [
         title: "第1区画：草食恐竜エリア (HERBIVORE)",
         location: "【移動先】1階 101教室前へ向かってください",
         question: "【調査ミッション 01】\n現地の展示パネルに隠された暗号を解読せよ。\n\n『巨大な首の影が指す方角にある4文字の英単語を入力せよ』",
-        answers: ["BRAK", "ブラキオ"], // 半角・全角・大文字小文字は自動判定
+        answers: ["BRAK", "ブラキオ"],
         hint: "展示パネル右下の矢印の先にあるアルファベットを順に読んでみよう。",
         explanation: "正解は「BRAK」でした！草食恐竜のDNAサンプル回収に成功しました。"
     },
@@ -65,20 +65,19 @@ const SECTORS = [
 ];
 
 /* ==========================================================
-   システム状態管理
+   システム制御ロジック
 ========================================================== */
 let teamName = localStorage.getItem("jw_team_name") || "";
 let clearedList = JSON.parse(localStorage.getItem("jw_cleared_list") || "[]");
 let currentSectorId = parseInt(localStorage.getItem("jw_current_id") || "0");
 let isViolationLocked = localStorage.getItem("jw_violation_locked") === "true";
 let isGameActive = false;
-let isInputFocused = false; // キーボード入力中の誤判定防止フラグ
 
-window.onload = () => {
-    bindAntiCheatEvents();
+document.addEventListener("DOMContentLoaded", () => {
+    bindAntiCheat();
 
     if (isViolationLocked) {
-        triggerSecurityViolation();
+        triggerViolation();
         return;
     }
 
@@ -88,25 +87,19 @@ window.onload = () => {
         isGameActive = true;
         initGame();
     }
-};
+});
 
-/* ==========================================================
-   🛡️ 不正検知（誤爆防止チューニング済み）
-========================================================== */
-function bindAntiCheatEvents() {
-    // 1. Page Visibility API（タブ切り替え・バックグラウンド移行の検知）
+function bindAntiCheat() {
     document.addEventListener("visibilitychange", () => {
         if (document.hidden && isGameActive && !isViolationLocked) {
-            triggerSecurityViolation();
+            triggerViolation();
         }
     });
 
-    // 2. 右クリック・コピー・カット禁止
     document.addEventListener("contextmenu", e => e.preventDefault());
     document.addEventListener("copy", e => e.preventDefault());
     document.addEventListener("cut", e => e.preventDefault());
 
-    // 3. 不正ショートカットキー禁止
     document.addEventListener("keydown", (e) => {
         if (
             e.key === "F12" ||
@@ -119,13 +112,12 @@ function bindAntiCheatEvents() {
     });
 }
 
-function triggerSecurityViolation() {
+function triggerViolation() {
     isViolationLocked = true;
     localStorage.setItem("jw_violation_locked", "true");
     document.getElementById("securityLockScreen").style.display = "flex";
 }
 
-// フルスクリーン（対応端末のみ安全に実行）
 function enterFullscreen() {
     const el = document.documentElement;
     try {
@@ -147,22 +139,14 @@ function exitFullscreen() {
     } catch (e) {}
 }
 
-/* ==========================================================
-   文字列正規化（全角/半角/大文字小文字の自動吸収）
-========================================================== */
 function normalizeText(str) {
     return str
         .trim()
         .toLowerCase()
-        // 全角英数を半角に変換
         .replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-        // 全角スペースを半角スペースにして除去
         .replace(/\s+/g, "");
 }
 
-/* ==========================================================
-   ゲーム進行ロジック
-========================================================== */
 function renderTeamSetup() {
     isGameActive = false;
     document.getElementById("teamBadge").innerText = "SETUP REQUIRED";
@@ -183,14 +167,18 @@ function renderTeamSetup() {
             <div class="input-row" style="margin-bottom:16px;">
                 <input type="text" id="teamInput" class="code-input" placeholder="例: チームA / 2班" style="text-align:center;">
             </div>
-            <button class="btn-next-sector" onclick="startInvestigation()">ロックして調査を開始</button>
+            <button type="button" class="btn-next-sector" onclick="startInvestigation()">ロックして調査を開始</button>
         </div>
     `;
+
+    document.getElementById("teamInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") startInvestigation();
+    });
 }
 
 function startInvestigation() {
     const input = document.getElementById("teamInput");
-    if (!input.value.trim()) {
+    if (!input || !input.value.trim()) {
         alert("チーム名を入力してください！");
         return;
     }
@@ -205,4 +193,219 @@ function startInvestigation() {
 function initGame() {
     document.getElementById("teamBadge").innerText = `TEAM: ${teamName}`;
     document.getElementById("sectorNav").style.display = "flex";
-    document.getElementById("statusBar").style
+    document.getElementById("statusBar").style.display = "flex";
+    document.getElementById("lockIndicator").style.display = "inline-block";
+
+    const maxUnlocked = clearedList.length;
+    if (currentSectorId > maxUnlocked) {
+        currentSectorId = maxUnlocked;
+    }
+
+    renderNavigation();
+    renderSector(currentSectorId);
+}
+
+function renderNavigation() {
+    const nav = document.getElementById("sectorNav");
+    nav.innerHTML = "";
+    const maxUnlocked = clearedList.length;
+
+    SECTORS.forEach((sec, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "nav-item";
+        
+        const isCleared = clearedList.includes(sec.id);
+        const isCurrent = sec.id === currentSectorId;
+        const isUnlocked = idx <= maxUnlocked;
+
+        let icon = "🔒";
+        if (isCleared) {
+            icon = "✓";
+            btn.classList.add("cleared");
+        } else if (isUnlocked) {
+            icon = "●";
+        } else {
+            btn.classList.add("locked");
+        }
+
+        if (isCurrent) btn.classList.add("active");
+
+        btn.innerHTML = `<span>${icon}</span><span>${sec.shortName}</span>`;
+
+        if (isUnlocked) {
+            btn.onclick = () => {
+                currentSectorId = sec.id;
+                localStorage.setItem("jw_current_id", currentSectorId);
+                renderNavigation();
+                renderSector(currentSectorId);
+            };
+        }
+
+        nav.appendChild(btn);
+    });
+
+    document.getElementById("progressCount").innerText = `${clearedList.length} / ${SECTORS.length} CLEARED`;
+}
+
+function renderSector(id) {
+    const sec = SECTORS[id];
+    const isCleared = clearedList.includes(sec.id);
+    const main = document.getElementById("mainArea");
+    const isLastSector = (id === SECTORS.length - 1);
+
+    main.innerHTML = `
+        <div class="sector-title-card">
+            <div class="sector-name">${sec.title}</div>
+            <span class="status-pill ${isCleared ? 'pill-cleared' : 'pill-investigating'}">
+                ${isCleared ? '✓ 調査完了' : '● 調査中'}
+            </span>
+        </div>
+
+        <div style="color: var(--jurassic-cyan); font-size:0.9rem; font-weight:bold; margin-bottom:12px;">
+            📍 ${sec.location}
+        </div>
+
+        <div class="puzzle-card">${sec.question}</div>
+
+        ${!isCleared ? `
+            <div class="form-area">
+                <div class="input-row">
+                    <input type="text" id="answerInput" class="code-input" placeholder="回答・コードを入力" autocomplete="off">
+                    <button type="button" class="btn-submit" onclick="submitAnswer()">送信</button>
+                </div>
+                <div id="errorAlert" class="error-alert">⚠ パスコードが一致しません。周囲の手がかりを再調査してください。</div>
+            </div>
+        ` : `
+            <div class="cleared-action-box">
+                <div class="msg">✓ この区画の調査データは認証完了しています！</div>
+                ${!isLastSector ? `
+                    <button type="button" class="btn-next-sector" onclick="goToNextSector()">次の区画へ進む →</button>
+                ` : `
+                    <div style="color: var(--jurassic-amber); font-weight:bold; font-size:1.1rem;">
+                        🎉 全ての調査が完了しました！受付へ向かってください！
+                    </div>
+                `}
+            </div>
+        `}
+
+        <div class="accordion-box">
+            <details>
+                <summary>💡 調査ヒントを確認する</summary>
+                <div class="accordion-body">${sec.hint}</div>
+            </details>
+            ${isCleared ? `
+                <details open>
+                    <summary>📄 調査レポート・解説</summary>
+                    <div class="accordion-body">${sec.explanation}</div>
+                </details>
+            ` : ''}
+        </div>
+    `;
+
+    if (!isCleared) {
+        document.getElementById("answerInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") submitAnswer();
+        });
+    }
+}
+
+function submitAnswer() {
+    const input = document.getElementById("answerInput");
+    const errorAlert = document.getElementById("errorAlert");
+    if (!input) return;
+
+    const userVal = normalizeText(input.value);
+    const sec = SECTORS[currentSectorId];
+
+    const isMatch = sec.answers.some(ans => normalizeText(ans) === userVal);
+
+    if (isMatch) {
+        errorAlert.style.display = "none";
+        if (!clearedList.includes(sec.id)) {
+            clearedList.push(sec.id);
+            localStorage.setItem("jw_cleared_list", JSON.stringify(clearedList));
+        }
+        showSuccessModal(sec);
+    } else {
+        errorAlert.style.display = "block";
+    }
+}
+
+function showSuccessModal(sec) {
+    const modal = document.getElementById("modalLayer");
+    const title = document.getElementById("modalTitle");
+    const desc = document.getElementById("modalDesc");
+    const btn = document.getElementById("modalBtn");
+
+    if (sec.id === SECTORS.length - 1) {
+        title.innerText = "🦖 MISSION COMPLETE!";
+        title.style.color = "var(--jurassic-amber)";
+        desc.innerText = `チーム【${teamName}】の皆さん、お見事です！\n全区画のセキュリティ再起動に成功しました。\n\n端末を持ったまま【本部受付】へ向かい、クリアの証を受け取ってください！`;
+        btn.innerText = "最終結果画面へ";
+    } else {
+        title.innerText = "ACCESS GRANTED";
+        title.style.color = "var(--jurassic-green)";
+        const nextSec = SECTORS[sec.id + 1];
+        desc.innerText = `【${sec.name}】の調査データを取得しました！\n\n次の区画のアクセス制限が解除されました。\n${nextSec.location}`;
+        btn.innerText = `「${nextSec.shortName}」へ進む`;
+    }
+
+    modal.style.display = "flex";
+}
+
+function nextFromModal() {
+    document.getElementById("modalLayer").style.display = "none";
+    goToNextSector();
+}
+
+function goToNextSector() {
+    if (currentSectorId < SECTORS.length - 1) {
+        currentSectorId++;
+        localStorage.setItem("jw_current_id", currentSectorId);
+    }
+    renderNavigation();
+    renderSector(currentSectorId);
+}
+
+/* ==========================================================
+   管理者モーダル操作
+========================================================== */
+function openAdminModal() {
+    const modal = document.getElementById("adminModalLayer");
+    document.getElementById("adminPasswordInput").value = "";
+    document.getElementById("adminErrorMsg").style.display = "none";
+    modal.style.display = "flex";
+    setTimeout(() => document.getElementById("adminPasswordInput").focus(), 100);
+}
+
+function closeAdminModal() {
+    document.getElementById("adminModalLayer").style.display = "none";
+}
+
+function verifyAdmin(actionType) {
+    const pass = document.getElementById("adminPasswordInput").value;
+    const errorMsg = document.getElementById("adminErrorMsg");
+
+    if (pass === ADMIN_PASSWORD) {
+        closeAdminModal();
+
+        if (actionType === "resume") {
+            isViolationLocked = false;
+            localStorage.removeItem("jw_violation_locked");
+            document.getElementById("securityLockScreen").style.display = "none";
+            enterFullscreen();
+        } else if (actionType === "reset") {
+            exitFullscreen();
+            localStorage.clear();
+            teamName = "";
+            clearedList = [];
+            currentSectorId = 0;
+            isViolationLocked = false;
+            document.getElementById("securityLockScreen").style.display = "none";
+            renderTeamSetup();
+        }
+    } else {
+        errorMsg.style.display = "block";
+    }
+}
