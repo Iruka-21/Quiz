@@ -1,6 +1,6 @@
 /* =========================================================================
    ISLA NUBLAR RESEARCH LAB — QUIZ EXPEDITION
-   quiz.js (QRコードにデータ埋め込み版)
+   quiz.js (完全版・QRデータ埋め込み・supported by対応)
    ========================================================================= */
 
 /* ============================== 1. CONFIG =============================== */
@@ -9,6 +9,9 @@ const CONFIG = {
   STORAGE_KEY: 'jw_quiz_expedition_state_v1',
   ADMIN_PASSCODE: 'admin', // ★★★ 必ず変更してください ★★★
   SECTOR_COUNT: 4,
+  GAME_NAME: 'ISLA NUBLAR RESEARCH LAB',
+  // ★★★ ここに協賛・実行委員会名を入れてください（空文字で非表示） ★★★
+  SUPPORTED_BY: '文化祭実行委員会',
 };
 
 /* --------------------------------------------------------------------------
@@ -694,8 +697,6 @@ function calculateScore(ms) {
   return 5000;
 }
 
-/* ============================ 完了画面（スコア・QRデータ埋め込み） ============================ */
-
 function formatDuration(ms) {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(totalSec / 60);
@@ -703,30 +704,47 @@ function formatDuration(ms) {
   return `${m}分${String(s).padStart(2, '0')}秒`;
 }
 
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + '年' + String(d.getMonth() + 1).padStart(2, '0') + '月' + String(d.getDate()).padStart(2, '0') + '日';
+}
+
+/* ============================ 完了画面 ============================ */
+
 function renderCompleteScreen() {
-  // データが state にない場合は何もしない
   if (!state.teamName) return;
 
   const duration = state.completedAt && state.createdAt ? state.completedAt - state.createdAt : 0;
   const score = calculateScore(duration);
+  const dateStr = formatDate(state.completedAt || Date.now());
+  const gameName = CONFIG.GAME_NAME;
+  const supportedBy = CONFIG.SUPPORTED_BY || '';
 
   document.getElementById('complete-team-name').textContent = state.teamName;
   document.getElementById('complete-duration').textContent = formatDuration(duration);
   document.getElementById('complete-score').textContent = score.toLocaleString() + ' pt';
   document.getElementById('complete-code').textContent = state.clues.map((c) => c.code).join(' - ');
+  document.getElementById('complete-date').textContent = dateStr;
+  document.getElementById('complete-game-name').textContent = gameName;
+  document.getElementById('complete-supported-by').textContent = supportedBy ? 'supported by ' + supportedBy : '';
+
   const listEl = document.getElementById('complete-clue-list');
   listEl.innerHTML = state.clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
 
-  // ★★★ QRコード用URLを生成（データをクエリパラメータに埋め込む） ★★★
+  // QRコード用URL生成
   const baseUrl = window.location.origin + window.location.pathname;
   const params = new URLSearchParams();
   params.set('qr', '1');
   params.set('team', state.teamName);
-  params.set('duration_ms', String(duration));
+  params.set('score', String(score));
+  params.set('date', dateStr);
+  params.set('game', gameName);
   params.set('clues', JSON.stringify(state.clues));
+  const columnUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
+  params.set('column', columnUrl);
   const qrUrl = baseUrl + '?' + params.toString();
 
-  // ページURL用QRコード（結果データを埋め込んだURL）
+  // ページURL用QRコード
   const pageContainer = document.getElementById('qr-page-url');
   pageContainer.innerHTML = '';
   try {
@@ -742,7 +760,68 @@ function renderCompleteScreen() {
     pageContainer.innerHTML = '<p style="font-size:11px;color:var(--c-text-dim);">QR生成エラー</p>';
   }
 
-  // コラムURL用QRコード（固定）
+  // コラムURL用QRコード
+  const columnContainer = document.getElementById('qr-column-url');
+  columnContainer.innerHTML = '';
+  try {
+    new QRCode(columnContainer, {
+      text: columnUrl,
+      width: 100,
+      height: 100,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+  } catch (e) {
+    columnContainer.innerHTML = '<p style="font-size:11px;color:var(--c-text-dim);">QR生成エラー</p>';
+  }
+
+  const isQR = new URLSearchParams(window.location.search).get('qr') === '1';
+  const subEl = document.getElementById('complete-sub');
+  if (isQR) {
+    subEl.textContent = '📱 スマートフォンからアクセス中 — 「結果を画像で保存」でダウンロードできます。';
+  } else {
+    subEl.textContent = '施設のロックダウンは解除された。エヴァキュエーション・エリアへ移動せよ。';
+  }
+}
+
+/* ============================ QRコードアクセス用表示 ============================ */
+
+function renderCompleteScreenWithParams(params) {
+  const team = params.get('team') || 'Unknown';
+  const score = params.get('score') || '0';
+  const date = params.get('date') || formatDate(Date.now());
+  const game = params.get('game') || CONFIG.GAME_NAME;
+  const clues = JSON.parse(params.get('clues') || '[]');
+  const supportedBy = CONFIG.SUPPORTED_BY || '';
+
+  document.getElementById('complete-team-name').textContent = team;
+  document.getElementById('complete-duration').textContent = '--';
+  document.getElementById('complete-score').textContent = Number(score).toLocaleString() + ' pt';
+  document.getElementById('complete-code').textContent = clues.map((c) => c.code).join(' - ');
+  document.getElementById('complete-date').textContent = date;
+  document.getElementById('complete-game-name').textContent = game;
+  document.getElementById('complete-supported-by').textContent = supportedBy ? 'supported by ' + supportedBy : '';
+
+  const listEl = document.getElementById('complete-clue-list');
+  listEl.innerHTML = clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
+
+  // QRコードの再生成（現在のURL）
+  const pageContainer = document.getElementById('qr-page-url');
+  pageContainer.innerHTML = '';
+  try {
+    new QRCode(pageContainer, {
+      text: window.location.href,
+      width: 100,
+      height: 100,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+  } catch (e) {
+    pageContainer.innerHTML = '<p style="font-size:11px;color:var(--c-text-dim);">QR生成エラー</p>';
+  }
+
   const columnContainer = document.getElementById('qr-column-url');
   columnContainer.innerHTML = '';
   try {
@@ -759,11 +838,7 @@ function renderCompleteScreen() {
     columnContainer.innerHTML = '<p style="font-size:11px;color:var(--c-text-dim);">QR生成エラー</p>';
   }
 
-  // スマホからのアクセスかどうかを表示（任意）
-  const isQR = new URLSearchParams(window.location.search).get('qr') === '1';
-  if (isQR) {
-    document.getElementById('complete-sub').textContent = '📱 スマートフォンからアクセス中 — 画像をダウンロードして保存してください。';
-  }
+  document.getElementById('complete-sub').textContent = '📱 スマートフォンからアクセス中 — 「結果を画像で保存」でダウンロードできます。';
 }
 
 /* ============================ 画像ダウンロード ============================ */
@@ -773,9 +848,12 @@ function downloadResultImage() {
   const duration = document.getElementById('complete-duration').textContent;
   const scoreText = document.getElementById('complete-score').textContent;
   const code = document.getElementById('complete-code').textContent;
+  const dateText = document.getElementById('complete-date').textContent;
+  const gameText = document.getElementById('complete-game-name').textContent;
+  const supportedBy = CONFIG.SUPPORTED_BY || '';
 
   const canvas = document.createElement('canvas');
-  const w = 800, h = 540;
+  const w = 800, h = 620;
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
@@ -791,34 +869,45 @@ function downloadResultImage() {
   ctx.strokeRect(15, 15, w - 30, h - 30);
 
   ctx.fillStyle = '#2bf078';
-  ctx.font = 'bold 34px Orbitron, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('ISLA NUBLAR LAB', 40, 80);
-  ctx.font = '18px Orbitron, sans-serif';
-  ctx.fillStyle = '#f59e0b';
-  ctx.fillText('EXPEDITION COMPLETE', 40, 120);
-
-  ctx.fillStyle = '#d7ece4';
-  ctx.font = '28px Noto Sans JP, sans-serif';
-  ctx.fillText('TEAM: ' + team, 40, 190);
-
-  ctx.fillStyle = '#f59e0b';
-  ctx.font = 'bold 30px Orbitron, sans-serif';
-  ctx.fillText('🏅 SCORE: ' + scoreText, 40, 260);
-
-  ctx.fillStyle = '#8fa8ab';
-  ctx.font = '18px Noto Sans JP, sans-serif';
-  ctx.fillText('⏱ Time: ' + duration, 40, 310);
-
-  ctx.fillStyle = '#38bdf8';
   ctx.font = 'bold 28px Orbitron, sans-serif';
-  ctx.fillText('CODE: ' + code, 40, 380);
+  ctx.textAlign = 'left';
+  ctx.fillText(gameText, 40, 70);
 
   ctx.fillStyle = '#8fa8ab';
   ctx.font = '16px Noto Sans JP, sans-serif';
-  ctx.fillText('© ISLA NUBLAR RESEARCH LAB', 40, h - 30);
+  ctx.fillText('📅 ' + dateText, 40, 105);
 
-  // コラムQRコード（白黒）
+  ctx.fillStyle = '#f59e0b';
+  ctx.font = '20px Orbitron, sans-serif';
+  ctx.fillText('EXPEDITION COMPLETE', 40, 150);
+
+  ctx.fillStyle = '#d7ece4';
+  ctx.font = '28px Noto Sans JP, sans-serif';
+  ctx.fillText('TEAM: ' + team, 40, 210);
+
+  ctx.fillStyle = '#f59e0b';
+  ctx.font = 'bold 30px Orbitron, sans-serif';
+  ctx.fillText('🏅 SCORE: ' + scoreText, 40, 280);
+
+  ctx.fillStyle = '#8fa8ab';
+  ctx.font = '18px Noto Sans JP, sans-serif';
+  ctx.fillText('⏱ Time: ' + duration, 40, 330);
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 28px Orbitron, sans-serif';
+  ctx.fillText('CODE: ' + code, 40, 400);
+
+  ctx.fillStyle = '#8fa8ab';
+  ctx.font = '14px Noto Sans JP, sans-serif';
+  ctx.fillText('© ' + gameText, 40, h - 70);
+
+  if (supportedBy) {
+    ctx.fillStyle = '#8fa8ab';
+    ctx.font = '14px Noto Sans JP, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('supported by ' + supportedBy, w / 2, h - 30);
+  }
+
   const columnUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
   const qrImg = new Image();
   qrImg.crossOrigin = 'Anonymous';
@@ -932,26 +1021,25 @@ function init() {
   attachSecurityListeners();
   bindEvents();
 
-  // ★★★ URLパラメータをチェック（QRコード経由のアクセス） ★★★
   const params = new URLSearchParams(window.location.search);
   if (params.get('qr') === '1') {
-    // QRコードからのアクセス → stateをパラメータで復元
+    // QRコードからのアクセス
     state = createDefaultState();
     state.teamName = params.get('team') || 'Unknown';
-    state.createdAt = Date.now() - parseInt(params.get('duration_ms') || 0);
     state.completedAt = Date.now();
+    state.createdAt = Date.now() - 0;
     state.clearedSectors = 4;
     state.finalCleared = true;
     state.clues = JSON.parse(params.get('clues') || '[]');
-    state.selectedPatterns = [0, 0, 0, 0]; // ダミー（表示には影響なし）
-    
+    state.selectedPatterns = [0, 0, 0, 0];
+
     showScreen('complete');
-    renderCompleteScreen();
-    disarmSecurity(); // スマホでロック監視は不要
+    renderCompleteScreenWithParams(params);
+    disarmSecurity();
     return;
   }
 
-  // 通常のタブレット用起動処理
+  // 通常のタブレット用起動
   state = loadState();
   if (state.teamName && state.completedAt) {
     showScreen('complete');
