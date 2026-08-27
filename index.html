@@ -1,7 +1,3 @@
----
-
-### 2. `index.html`
-```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -10,7 +6,7 @@
     <title>JURASSIC RESEARCH SYSTEM</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body oncontextmenu="return false;">
 
 <div class="tablet-frame">
     <!-- ヘッダー -->
@@ -18,26 +14,40 @@
         <div class="header-title-area">
             <h1>🦖 JURASSIC LAB</h1>
         </div>
-        <div class="header-team-badge" id="teamBadge">TEAM: ---</div>
+        <div class="header-status-area">
+            <span class="lock-indicator" id="lockIndicator">🔒 LOCK MODE</span>
+            <div class="header-team-badge" id="teamBadge">TEAM: ---</div>
+        </div>
     </header>
 
     <!-- リアルタイム進捗ステータスバー -->
     <div class="status-banner" id="statusBar">
-        <span id="systemStatusText">SYSTEM: ACTIVE</span>
+        <span id="systemStatusText">SYSTEM: LOCKED TO RESEARCH TERMINAL</span>
         <span id="progressCount">0 / 5 CLEARED</span>
     </div>
 
-    <!-- 区画切り替えタブ（クリアしないと先へ進めない） -->
+    <!-- 区画切り替えタブ（問題を解かないと移動不可） -->
     <nav class="progress-nav" id="sectorNav"></nav>
 
-    <!-- メイン操作エリア -->
+    <!-- メインコンテンツ -->
     <main class="main-content" id="mainArea"></main>
 
     <!-- フッター -->
     <footer class="system-footer">
-        <span>JURASSIC OPERATING SYSTEM v4.2</span>
-        <button class="btn-reset" onclick="confirmReset()">端末初期化 (次チームへ)</button>
+        <span>SECURITY LEVEL: RESTRICTED</span>
+        <!-- 画面端の管理者ボタン -->
+        <button class="btn-admin-trigger" onclick="openAdminModal()">⚙️ ADMIN UNLOCK</button>
     </footer>
+</div>
+
+<!-- セキュリティ違反警告オーバーレイ -->
+<div class="security-overlay" id="securityOverlay">
+    <div class="security-card">
+        <div class="security-icon">⚠️</div>
+        <h2>セキュリティ警告</h2>
+        <p>画面の離脱または不正な操作を検知しました。<br>調査端末モードを維持してください。</p>
+        <button class="btn-resume" onclick="resumeLockMode()">調査画面に戻る</button>
+    </div>
 </div>
 
 <!-- クリア演出モーダル -->
@@ -46,6 +56,22 @@
         <div class="modal-title" id="modalTitle">ACCESS GRANTED</div>
         <div class="modal-desc" id="modalDesc">調査データを承認しました。</div>
         <button class="btn-next-sector" id="modalBtn" onclick="nextFromModal()">次の区画へ進む</button>
+    </div>
+</div>
+
+<!-- 管理者認証モーダル -->
+<div class="modal-layer" id="adminModalLayer">
+    <div class="modal-card admin-card">
+        <div class="modal-title" style="color: var(--jurassic-amber);">🔐 管理者ロック解除</div>
+        <div class="modal-desc">端末を初期化してロックを解除するには<br>管理者パスコードを入力してください。</div>
+        <div class="input-row" style="margin-bottom: 16px;">
+            <input type="password" id="adminPasswordInput" class="code-input" placeholder="パスコード" style="text-align: center;">
+        </div>
+        <div id="adminErrorMsg" class="error-alert" style="margin-bottom: 12px;">パスコードが違います</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-submit" style="background:#334155; color:#fff;" onclick="closeAdminModal()">戻る</button>
+            <button class="btn-submit" style="background:var(--jurassic-red); color:#fff;" onclick="verifyAdminUnlock()">解除・初期化</button>
+        </div>
     </div>
 </div>
 
