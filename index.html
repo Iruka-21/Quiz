@@ -1,84 +1,70 @@
+---
+
+### 2. `index.html`
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JURASSIC RESEARCH SYSTEM</title>
+    <title>ジュラシック・ワールド クイズ・エクスペディション</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .modal-layer, .security-lock-screen { display: none !important; }
+    </style>
 </head>
 <body>
 
-<div class="tablet-frame">
-    <!-- ヘッダー -->
-    <header class="system-header">
-        <div class="header-title-area">
-            <h1>🦖 JURASSIC LAB</h1>
-        </div>
-        <div class="header-status-area">
-            <span class="lock-indicator" id="lockIndicator">🔒 LOCKED</span>
-            <div class="header-team-badge" id="teamBadge">TEAM: ---</div>
-        </div>
-    </header>
-
-    <!-- 状況ステータスバー -->
-    <div class="status-banner" id="statusBar">
-        <span id="systemStatusText">ISLA NUBLAR RESEARCH TERMINAL</span>
-        <span id="progressCount">0 / 5 CLEARED</span>
-    </div>
-
-    <!-- 区画ナビゲーション -->
-    <nav class="progress-nav" id="sectorNav"></nav>
-
-    <!-- メインコンテンツ表示エリア -->
-    <main class="main-content" id="mainArea"></main>
-
-    <!-- フッター -->
-    <footer class="system-footer">
-        <span>SECURITY LEVEL: RESTRICTED</span>
-        <button type="button" class="btn-admin-trigger" onclick="openAdminModal()">⚙️ ADMIN</button>
-    </footer>
-</div>
-
-<!-- 🚨 緊急ロック画面 -->
-<div class="security-lock-screen" id="securityLockScreen">
-    <div class="security-card">
-        <div class="alarm-icon">🚨</div>
-        <h2 class="alarm-title">SECURITY VIOLATION</h2>
-        <div class="alarm-subtitle">【 端末緊急ロック発動 】</div>
-        <p class="alarm-text">
-            別タブの閲覧、画面の離脱、または不正操作を検知しました。<br>
-            セキュリティプロトコルにより端末操作が制限されました。
-        </p>
-        <div class="alarm-guide">
-            ※巡回スタッフまたは本部受付に本画面を提示し、ロック解除を依頼してください。
-        </div>
-        <button type="button" class="btn-admin-emergency" onclick="openAdminModal()">⚙️ スタッフ専用解除</button>
-    </div>
-</div>
-
-<!-- クリア演出モーダル -->
-<div class="modal-layer" id="modalLayer">
-    <div class="modal-card" id="modalCard">
-        <div class="modal-title" id="modalTitle">ACCESS GRANTED</div>
-        <div class="modal-desc" id="modalDesc">調査データを承認しました。</div>
-        <button type="button" class="btn-next-sector" id="modalBtn" onclick="nextFromModal()">次の区画へ進む</button>
-    </div>
-</div>
-
-<!-- 管理者認証モーダル -->
-<div class="modal-layer" id="adminModalLayer">
-    <div class="modal-card admin-card">
-        <div class="modal-title" style="color: var(--jurassic-amber);">🔐 管理者セキュリティ認証</div>
-        <div class="modal-desc">スタッフ用パスコードを入力してください。</div>
-        <div class="input-row" style="margin-bottom: 16px;">
-            <input type="password" id="adminPasswordInput" class="code-input" placeholder="PASSCODE" style="text-align: center;">
-        </div>
-        <div id="adminErrorMsg" class="error-alert" style="margin-bottom: 14px;">⚠ パスコードが一致しません</div>
-        
-        <div class="admin-actions">
-            <button type="button" class="btn-action btn-cancel" onclick="closeAdminModal()">閉じる</button>
-            <button type="button" class="btn-action btn-resume-game" onclick="verifyAdmin('resume')">ロック解除 (再開)</button>
-            <button type="button" class="btn-action btn-reset-game" onclick="verifyAdmin('reset')">端末初期化 (次へ)</button>
+<div class="expedition-app" id="appContainer">
+    <!-- 最上部ユーティリティバー -->
+    <div class="top-nav">
+        <div class="top-nav-team" id="topTeamName">TEAM: ---</div>
+        <div class="top-nav-links">
+            <button type="button" class="top-btn" onclick="openInfoModal('howTo')">📖 遊び方</button>
+            <button type="button" class="top-btn" onclick="openInfoModal('rules')">❓ 注意事項</button>
         </div>
     </div>
-</div>
+
+    <!-- メインダッシュボード -->
+    <div class="dashboard-grid">
+        <!-- 左側：ロゴ & ミッション -->
+        <div class="dash-left">
+            <div class="logo-area">
+                <div class="jw-badge">
+                    <div class="jw-logo-icon">🦖</div>
+                    <div class="jw-logo-titles">
+                        <div class="jw-logo-main">ジュラシック・ワールド</div>
+                        <div class="jw-logo-sub">クイズ・エクスペディション</div>
+                    </div>
+                </div>
+                <p class="jw-tagline">ジュラシック・ワールドの謎を解き明かし、すべての区画を調査せよ。</p>
+            </div>
+
+            <!-- 現在のミッションパネル -->
+            <div class="mission-panel">
+                <div class="panel-tag">現在のミッション</div>
+                <div class="mission-heading">
+                    <span class="footprint-icon">🐾</span>
+                    <span>現在 <strong id="currentSectorHighlight" class="highlight-green">一区画</strong> を調査中です。</span>
+                </div>
+                <div class="mission-sub" id="currentSectorDesc">
+                    次の区画に進むために、クイズを解いて手がかりを集めよう。
+                </div>
+                <div class="mission-location" id="currentSectorLocation">
+                    📍 【移動先】1階 101教室前へ向かってください
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：STATUS & レーダー -->
+        <div class="dash-right">
+            <div class="status-box">
+                <div class="status-title">STATUS</div>
+                <div class="status-item">
+                    <div class="status-label">調査済み区画</div>
+                    <div class="status-val highlight-green" id="statClearedSectors">0 / 4</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">発見した手がかり</div>
+                    <div class="status-val highlight-green" id="statClues">0 / 8</div>
