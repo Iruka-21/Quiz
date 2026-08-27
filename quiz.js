@@ -18,6 +18,7 @@
 const CONFIG = {
   STORAGE_KEY: 'jw_quiz_expedition_state_v1',
   // ★★★ 編集エリア：管理者パスワードを変更する ★★★
+  // デフォルトは 'admin' ですが、必ず独自のパスワードに変更してください！
   ADMIN_PASSCODE: 'admin', // 🔑 ここを任意のパスワードに変更してください
   SECTOR_COUNT: 4,
 };
@@ -381,7 +382,8 @@ function closeAdminModal() {
 function submitAdminPasscode() {
   const passInput = document.getElementById('admin-passcode-input');
   const errorEl = document.getElementById('admin-auth-error');
-  const val = passInput ? passInput.value : '';
+  // ★ 入力値の前後スペースを除去して比較（誤入力を防ぐ）
+  const val = passInput ? passInput.value.trim() : '';
   if (val === CONFIG.ADMIN_PASSCODE) {
     adminAuthenticated = true;
     document.getElementById('admin-auth-panel').classList.add('hidden');
