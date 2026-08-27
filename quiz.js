@@ -1,6 +1,10 @@
 /* ==========================================================
+   🔑 セキュリティ設定
+========================================================== */
+const ADMIN_PASSWORD = "admin"; // 管理者解除パスコード（変更可）
+
+/* ==========================================================
    🟩 問題データ設定エリア 🟩
-   ここを編集するだけで問題・答え・ヒント・解説を変更できます。
 ========================================================== */
 const SECTORS = [
     {
@@ -61,34 +65,95 @@ const SECTORS = [
 ];
 
 /* ==========================================================
-   システム制御ロジック
+   システム制御 & ロック機能
 ========================================================== */
 let teamName = localStorage.getItem("jw_team_name") || "";
 let clearedList = JSON.parse(localStorage.getItem("jw_cleared_list") || "[]");
 let currentSectorId = parseInt(localStorage.getItem("jw_current_id") || "0");
+let isGameActive = false;
 
 window.onload = () => {
+    setupSecurityEvents();
+
     if (!teamName) {
         renderTeamSetup();
     } else {
+        isGameActive = true;
         initGame();
     }
 };
 
+// 不正防止イベントリスナー
+function setupSecurityEvents() {
+    // ショートカットキー・開発者ツール禁止
+    document.addEventListener("keydown", (e) => {
+        if (
+            e.key === "F12" ||
+            (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C")) ||
+            (e.ctrlKey && (e.key === "u" || e.key === "U" || e.key === "w" || e.key === "W"))
+        ) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // 画面離脱・タブ切り替え監視（ゲーム中のみ警告）
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden && isGameActive) {
+            triggerSecurityWarning();
+        }
+    });
+}
+
+function triggerSecurityWarning() {
+    document.getElementById("securityOverlay").style.display = "flex";
+}
+
+function resumeLockMode() {
+    document.getElementById("securityOverlay").style.display = "none";
+    requestFullscreen();
+}
+
+// フルスクリーン化
+function requestFullscreen() {
+    const docEl = document.documentElement;
+    if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+    } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+    }
+}
+
+// フルスクリーン解除
+function exitFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    }
+}
+
+// チーム名入力画面
 function renderTeamSetup() {
+    isGameActive = false;
     document.getElementById("teamBadge").innerText = "SETUP REQUIRED";
     document.getElementById("sectorNav").style.display = "none";
     document.getElementById("statusBar").style.display = "none";
+    document.getElementById("lockIndicator").style.display = "none";
 
     const main = document.getElementById("mainArea");
     main.innerHTML = `
         <div class="setup-screen">
             <h2>🦖 調査端末初期設定</h2>
-            <p>本端末を使用する調査チーム名（または班番号）を入力して、調査を開始してください。</p>
+            <p>本端末を使用する調査チーム名を入力してロックモードを開始してください。</p>
+            <div class="lock-notice-box">
+                🔒 <strong>テストロックモードが適用されます</strong><br>
+                開始すると調査端末モードとなり、終了時まで他機能が制限されます。
+            </div>
             <div class="input-row" style="margin-bottom:16px;">
                 <input type="text" id="teamInput" class="code-input" placeholder="例: チームA / 3班" style="text-align:center;">
             </div>
-            <button class="btn-next-sector" onclick="startInvestigation()">調査を開始する</button>
+            <button class="btn-next-sector" onclick="startInvestigation()">ロックして調査を開始</button>
         </div>
     `;
 }
@@ -101,6 +166,9 @@ function startInvestigation() {
     }
     teamName = input.value.trim();
     localStorage.setItem("jw_team_name", teamName);
+    
+    isGameActive = true;
+    requestFullscreen(); // 全画面テストロックモード起動
     initGame();
 }
 
@@ -108,6 +176,7 @@ function initGame() {
     document.getElementById("teamBadge").innerText = `TEAM: ${teamName}`;
     document.getElementById("sectorNav").style.display = "flex";
     document.getElementById("statusBar").style.display = "flex";
+    document.getElementById("lockIndicator").style.display = "inline-block";
 
     const maxUnlocked = clearedList.length;
     if (currentSectorId > maxUnlocked) {
@@ -256,13 +325,11 @@ function showSuccessModal(sec) {
     const btn = document.getElementById("modalBtn");
 
     if (sec.id === SECTORS.length - 1) {
-        card.classList.add("final");
         title.innerText = "🦖 MISSION COMPLETE!";
         title.style.color = "var(--jurassic-amber)";
         desc.innerText = `チーム【${teamName}】の皆さん、お見事です！\n全区画のセキュリティ再起動に成功しました。\n\n端末を持ったまま【本部受付】へ向かい、クリアの証を受け取ってください！`;
         btn.innerText = "最終結果画面へ";
     } else {
-        card.classList.remove("final");
         title.innerText = "ACCESS GRANTED";
         title.style.color = "var(--jurassic-green)";
         const nextSec = SECTORS[sec.id + 1];
@@ -287,12 +354,36 @@ function goToNextSector() {
     renderSector(currentSectorId);
 }
 
-function confirmReset() {
-    if (confirm("【管理者用】\nチームデータと進行状況をすべて初期化し、次のチームに渡せる状態に戻しますか？")) {
+/* ==========================================================
+   管理者解除モーダル & 初期化
+========================================================== */
+function openAdminModal() {
+    const modal = document.getElementById("adminModalLayer");
+    document.getElementById("adminPasswordInput").value = "";
+    document.getElementById("adminErrorMsg").style.display = "none";
+    modal.style.display = "flex";
+    setTimeout(() => document.getElementById("adminPasswordInput").focus(), 100);
+}
+
+function closeAdminModal() {
+    document.getElementById("adminModalLayer").style.display = "none";
+}
+
+function verifyAdminUnlock() {
+    const pass = document.getElementById("adminPasswordInput").value;
+    const errorMsg = document.getElementById("adminErrorMsg");
+
+    if (pass === ADMIN_PASSWORD) {
+        closeAdminModal();
+        exitFullscreen();
         localStorage.clear();
         teamName = "";
         clearedList = [];
         currentSectorId = 0;
+        isGameActive = false;
         renderTeamSetup();
+        alert("✅ 管理者認証に成功しました。端末を初期化しました。");
+    } else {
+        errorMsg.style.display = "block";
     }
 }
