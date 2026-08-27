@@ -1,461 +1,298 @@
-/*
-  ============================================================
-  4 PARTS + FINAL PART クイズ
-  ============================================================
-
-  【構成】
-  PART 1〜4：
-    それぞれ複数の問題を用意できます。
-    各PARTの最後に「PARTの答え」を設定します。
-
-  FINAL：
-    PART 1〜4 の答えの「頭文字」を順番に並べると、
-    最終的な答えになります。
-
-  🟩〇〇🟩 の部分を自由に編集してください。
-  ============================================================
-*/
-
-// ============================================================
-// PART 1
-// ============================================================
-
-const part1 = {
-  title: "🟩PART 1：パート名🟩",
-
-  questions: [
+/* ==========================================================
+   🟩 問題データ設定エリア 🟩
+   ここを編集するだけで問題・答え・ヒント・解説を変更できます。
+========================================================== */
+const SECTORS = [
     {
-      question: "🟩PART 1 - 問題1🟩",
-      choices: [
-        "🟩答えA🟩",
-        "🟩答えB🟩",
-        "🟩答えC🟩",
-        "🟩答えD🟩"
-      ],
-      answer: 0,
-      hint: "🟩ヒント🟩",
-      explanation: "🟩解説🟩"
+        id: 0,
+        name: "第1区画",
+        shortName: "第1区画",
+        title: "第1区画：草食恐竜エリア (HERBIVORE)",
+        location: "【移動先】1階 101教室前へ向かってください",
+        question: "【調査ミッション 01】\n現地の展示パネルに隠された暗号を解読せよ。\n\n『巨大な首の影が指す方角にある4文字の英単語を入力せよ』",
+        answers: ["BRAK", "brak", "ブラキオ"],
+        hint: "展示パネル右下の矢印の先にあるアルファベットを順に読んでみよう。",
+        explanation: "正解は「BRAK」でした！草食恐竜のDNAサンプル回収に成功しました。"
     },
-
     {
-      question: "🟩PART 1 - 問題2🟩",
-      choices: [
-        "🟩答えA🟩",
-        "🟩答えB🟩",
-        "🟩答えC🟩",
-        "🟩答えD🟩"
-      ],
-      answer: 1,
-      hint: "🟩ヒント🟩",
-      explanation: "🟩解説🟩"
-    }
-
-    // ↓ 問題を追加できます
-  ],
-
-  // このPARTから得られる答え
-  finalAnswer: "🟩A🟩"
-};
-
-
-// ============================================================
-// PART 2
-// ============================================================
-
-const part2 = {
-  title: "🟩PART 2：パート名🟩",
-
-  questions: [
-    {
-      question: "🟩PART 2 - 問題1🟩",
-      choices: [
-        "🟩答えA🟩",
-        "🟩答えB🟩",
-        "🟩答えC🟩",
-        "🟩答えD🟩"
-      ],
-      answer: 0,
-      hint: "🟩ヒント🟩",
-      explanation: "🟩解説🟩"
+        id: 1,
+        name: "第2区画",
+        shortName: "第2区画",
+        title: "第2区画：遺伝子研究ラボ (LABORATORY)",
+        location: "【移動先】2階 生徒会室前へ向かってください",
+        question: "【調査ミッション 02】\n培養ポッドのセキュリティコードを特定せよ。\n\n『琥珀のDNA配列から欠落している恐竜のコードネームは？』",
+        answers: ["RAPTOR", "raptor", "ラプター"],
+        hint: "ポッドの側面に貼られた「A-T-G-C」の変換表をチェック！",
+        explanation: "正解は「RAPTOR」でした！小型肉食恐竜の隔離フェンスコードを取得しました。"
     },
-
     {
-      question: "🟩PART 2 - 問題2🟩",
-      choices: [
-        "🟩答えA🟩",
-        "🟩答えB🟩",
-        "🟩答えC🟩",
-        "🟩答えD🟩"
-      ],
-      answer: 1,
-      hint: "🟩ヒント🟩",
-      explanation: "🟩解説🟩"
-    }
-  ],
-
-  finalAnswer: "🟩B🟩"
-};
-
-
-// ============================================================
-// PART 3
-// ============================================================
-
-const part3 = {
-  title: "🟩PART 3：パート名🟩",
-
-  questions: [
-    {
-      question: "🟩PART 3 - 問題1🟩",
-      choices: [
-        "🟩答えA🟩",
-        "🟩答えB🟩",
-        "🟩答えC🟩",
-        "🟩答えD🟩"
-      ],
-      answer: 0,
-      hint: "🟩ヒント🟩",
-      explanation: "🟩解説🟩"
+        id: 2,
+        name: "第3区画",
+        shortName: "第3区画",
+        title: "第3区画：翼竜観測ドーム (AVIARY)",
+        location: "【移動先】2階 渡り廊下へ向かってください",
+        question: "【調査ミッション 03】\n上空を旋回する翼竜の監視カメラデータを解析せよ。\n\n『監視カメラNo.12、No.25、No.40の数字の合計を入力せよ』",
+        answers: ["77", "７７"],
+        hint: "掲示された3枚の写真に小さく書かれた番号を足し算してみよう。",
+        explanation: "正解は「77」でした！ドーム天井のシャッターが開放されました。"
     },
-
     {
-      question: "🟩PART 3 - 問題2🟩",
-      choices: [
-        "🟩答えA🟩",
-        "🟩答えB🟩",
-        "🟩答えC🟩",
-        "🟩答えD🟩"
-      ],
-      answer: 1,
-      hint: "🟩ヒント🟩",
-      explanation: "🟩解説🟩"
-    }
-  ],
-
-  finalAnswer: "🟩C🟩"
-};
-
-
-// ============================================================
-// PART 4
-// ============================================================
-
-const part4 = {
-  title: "🟩PART 4：パート名🟩",
-
-  questions: [
-    {
-      question: "🟩PART 4 - 問題1🟩",
-      choices: [
-        "🟩答えA🟩",
-        "🟩答えB🟩",
-        "🟩答えC🟩",
-        "🟩答えD🟩"
-      ],
-      answer: 0,
-      hint: "🟩ヒント🟩",
-      explanation: "🟩解説🟩"
+        id: 3,
+        name: "第4区画",
+        shortName: "第4区画",
+        title: "第4区画：T-REX キングダム (CARNIVORE)",
+        location: "【移動先】3階 体育館前特設エリアへ向かってください",
+        question: "【調査ミッション 04】\n肉食恐竜エリアの高圧電流フェンスを再起動せよ。\n\n『足跡の化石に刻まれたアルファベット3文字を入力せよ』",
+        answers: ["REX", "rex", "レックス"],
+        hint: "地面の足跡プレートをかかとから爪先へ向かって読んでみよう。",
+        explanation: "正解は「REX」でした！メインフェンスの電力が安全に復旧しました。"
     },
-
     {
-      question: "🟩PART 4 - 問題2🟩",
-      choices: [
-        "🟩答えA🟩",
-        "🟩答えB🟩",
-        "🟩答えC🟩",
-        "🟩答えD🟩"
-      ],
-      answer: 1,
-      hint: "🟩ヒント🟩",
-      explanation: "🟩解説🟩"
+        id: 4,
+        name: "FINAL",
+        shortName: "FINAL",
+        title: "最終区画：中央制御タワー (CONTROL CENTER)",
+        location: "【移動先】1階 本部受付へ向かってください",
+        question: "【最終ミッション】\nパーク全体の制御システムを完全再起動せよ！\n\n『第1〜第4区画の答えの【頭文字】を順番に4文字並べて入力せよ！』\n（例：BRAK → B）",
+        answers: ["BR7R", "br7r", "BRAR", "brar"],
+        hint: "第1〜第4区画の正解（BRAK, RAPTOR, 77, REX）の頭文字を並べよう。",
+        explanation: "全システム再起動成功！パークの全恐竜の隔離が完了し、完全脱出ルートが開かれました！"
     }
-  ],
+];
 
-  finalAnswer: "🟩D🟩"
+/* ==========================================================
+   システム制御ロジック
+========================================================== */
+let teamName = localStorage.getItem("jw_team_name") || "";
+let clearedList = JSON.parse(localStorage.getItem("jw_cleared_list") || "[]");
+let currentSectorId = parseInt(localStorage.getItem("jw_current_id") || "0");
+
+window.onload = () => {
+    if (!teamName) {
+        renderTeamSetup();
+    } else {
+        initGame();
+    }
 };
 
+function renderTeamSetup() {
+    document.getElementById("teamBadge").innerText = "SETUP REQUIRED";
+    document.getElementById("sectorNav").style.display = "none";
+    document.getElementById("statusBar").style.display = "none";
 
-// ============================================================
-// FINAL PART
-// ============================================================
-//
-// PART 1〜4の答えの頭文字を使って最終回答を導きます。
-//
-// 例：
-// PART 1 = Apple
-// PART 2 = Book
-// PART 3 = Cat
-// PART 4 = Dog
-//
-// → A + B + C + D
-// → 最終回答「ABCD」
-//
-// finalAnswer は完成した答えに合わせて設定してください。
-// ============================================================
-
-const finalPart = {
-  title: "🟩FINAL：最後の謎🟩",
-
-  question:
-    "🟩PART 1〜4で得られた答えの頭文字を順番に並べると、何になるでしょう？🟩",
-
-  hint:
-    "🟩4つのPARTで得られた答えの最初の文字に注目してください。🟩",
-
-  // PART 1〜4の答えから自動生成されます
-  get answer() {
-    return [
-      clean(part1.finalAnswer),
-      clean(part2.finalAnswer),
-      clean(part3.finalAnswer),
-      clean(part4.finalAnswer)
-    ].map(answer => answer.trim().charAt(0)).join("");
-  },
-
-  // 必要なら最終答えの説明も編集できます
-  explanation:
-    "🟩4つのPARTの答えの頭文字を順番に並べたものが最終回答です。🟩"
-};
-
-
-// ============================================================
-// 以下は基本的に編集不要
-// ============================================================
-
-function clean(text) {
-  return String(text).replaceAll("🟩", "");
+    const main = document.getElementById("mainArea");
+    main.innerHTML = `
+        <div class="setup-screen">
+            <h2>🦖 調査端末初期設定</h2>
+            <p>本端末を使用する調査チーム名（または班番号）を入力して、調査を開始してください。</p>
+            <div class="input-row" style="margin-bottom:16px;">
+                <input type="text" id="teamInput" class="code-input" placeholder="例: チームA / 3班" style="text-align:center;">
+            </div>
+            <button class="btn-next-sector" onclick="startInvestigation()">調査を開始する</button>
+        </div>
+    `;
 }
 
-const parts = [part1, part2, part3, part4];
-
-let currentPart = 0;
-let currentQuestion = 0;
-let score = 0;
-let totalQuestions = parts.reduce((sum, part) => sum + part.questions.length, 0);
-let answered = false;
-
-function getCurrentQuestion() {
-  return parts[currentPart]?.questions[currentQuestion];
+function startInvestigation() {
+    const input = document.getElementById("teamInput");
+    if (!input.value.trim()) {
+        alert("チーム名を入力してください！");
+        return;
+    }
+    teamName = input.value.trim();
+    localStorage.setItem("jw_team_name", teamName);
+    initGame();
 }
 
-function render() {
-  if (currentPart >= parts.length) {
-    renderFinalPart();
-    return;
-  }
+function initGame() {
+    document.getElementById("teamBadge").innerText = `TEAM: ${teamName}`;
+    document.getElementById("sectorNav").style.display = "flex";
+    document.getElementById("statusBar").style.display = "flex";
 
-  const part = parts[currentPart];
-  const q = getCurrentQuestion();
-
-  if (!q) {
-    currentPart++;
-    currentQuestion = 0;
-    render();
-    return;
-  }
-
-  answered = false;
-
-  $("quizCard").classList.remove("hidden");
-  $("resultCard").classList.add("hidden");
-
-  $("questionNumber").textContent =
-    `PART ${currentPart + 1}  /  Q${currentQuestion + 1}`;
-
-  $("progressText").textContent =
-    `${currentQuestion + 1} / ${part.questions.length}`;
-
-  $("scoreText").textContent = `正解 ${score}`;
-
-  $("question").textContent =
-    `${clean(part.title)}\n\n${clean(q.question)}`;
-
-  $("question").style.whiteSpace = "pre-line";
-
-  $("choices").innerHTML = "";
-
-  q.choices.forEach((choice, index) => {
-    const button = document.createElement("button");
-    button.className = "choice";
-    button.textContent =
-      `${String.fromCharCode(65 + index)}. ${clean(choice)}`;
-
-    button.addEventListener("click", () => selectAnswer(index));
-    $("choices").appendChild(button);
-  });
-
-  $("hint").textContent = clean(q.hint);
-  $("hint").classList.add("hidden");
-  $("hintBtn").classList.remove("hidden");
-  $("hintBtn").textContent = "💡 ヒントを見る";
-
-  $("explanation").textContent = clean(q.explanation);
-  $("explanation").classList.add("hidden");
-
-  $("nextBtn").classList.add("hidden");
-
-  updateProgress();
-}
-
-function updateProgress() {
-  const completed =
-    parts
-      .slice(0, currentPart)
-      .reduce((sum, part) => sum + part.questions.length, 0)
-    + currentQuestion;
-
-  $("progressBar").style.width =
-    `${(completed / totalQuestions) * 100}%`;
-}
-
-function selectAnswer(index) {
-  if (answered) return;
-  answered = true;
-
-  const q = getCurrentQuestion();
-  const buttons = [...document.querySelectorAll(".choice")];
-
-  buttons.forEach((button, i) => {
-    button.disabled = true;
-
-    if (i === q.answer) {
-      button.classList.add("correct");
+    const maxUnlocked = clearedList.length;
+    if (currentSectorId > maxUnlocked) {
+        currentSectorId = maxUnlocked;
     }
 
-    if (i === index && i !== q.answer) {
-      button.classList.add("wrong");
+    renderNavigation();
+    renderSector(currentSectorId);
+}
+
+function renderNavigation() {
+    const nav = document.getElementById("sectorNav");
+    nav.innerHTML = "";
+    
+    const maxUnlocked = clearedList.length;
+
+    SECTORS.forEach((sec, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "nav-item";
+        
+        const isCleared = clearedList.includes(sec.id);
+        const isCurrent = sec.id === currentSectorId;
+        const isUnlocked = idx <= maxUnlocked;
+
+        let icon = "🔒";
+        if (isCleared) {
+            icon = "✓";
+            btn.classList.add("cleared");
+        } else if (isUnlocked) {
+            icon = "●";
+        } else {
+            btn.classList.add("locked");
+        }
+
+        if (isCurrent) {
+            btn.classList.add("active");
+        }
+
+        btn.innerHTML = `<span>${icon}</span><span>${sec.shortName}</span>`;
+
+        if (isUnlocked) {
+            btn.onclick = () => {
+                currentSectorId = sec.id;
+                localStorage.setItem("jw_current_id", currentSectorId);
+                renderNavigation();
+                renderSector(currentSectorId);
+            };
+        }
+
+        nav.appendChild(btn);
+    });
+
+    const clearedCount = clearedList.length;
+    document.getElementById("progressCount").innerText = `${clearedCount} / ${SECTORS.length} CLEARED`;
+}
+
+function renderSector(id) {
+    const sec = SECTORS[id];
+    const isCleared = clearedList.includes(sec.id);
+    const main = document.getElementById("mainArea");
+    const isLastSector = (id === SECTORS.length - 1);
+
+    main.innerHTML = `
+        <div class="sector-title-card">
+            <div class="sector-name">${sec.title}</div>
+            <span class="status-pill ${isCleared ? 'pill-cleared' : 'pill-investigating'}">
+                ${isCleared ? '✓ 調査完了' : '● 調査中'}
+            </span>
+        </div>
+
+        <div style="color: var(--jurassic-cyan); font-size:0.9rem; font-weight:bold; margin-bottom:12px;">
+            📍 ${sec.location}
+        </div>
+
+        <div class="puzzle-card">${sec.question}</div>
+
+        ${!isCleared ? `
+            <div class="form-area">
+                <div class="input-row">
+                    <input type="text" id="answerInput" class="code-input" placeholder="回答・パスコードを入力" autocomplete="off">
+                    <button class="btn-submit" onclick="submitAnswer()">送信</button>
+                </div>
+                <div id="errorAlert" class="error-alert">⚠ パスコードが一致しません。周囲の手がかりを再調査してください。</div>
+            </div>
+        ` : `
+            <div class="cleared-action-box">
+                <div class="msg">✓ この区画の調査データは認証完了しています！</div>
+                ${!isLastSector ? `
+                    <button class="btn-next-sector" onclick="goToNextSector()">次の区画へ進む →</button>
+                ` : `
+                    <div style="color: var(--jurassic-amber); font-weight:bold; font-size:1.1rem;">
+                        🎉 全ての調査が完了しました！受付へ向かってください！
+                    </div>
+                `}
+            </div>
+        `}
+
+        <div class="accordion-box">
+            <details>
+                <summary>💡 調査ヒントを確認する</summary>
+                <div class="accordion-body">${sec.hint}</div>
+            </details>
+            ${isCleared ? `
+                <details open>
+                    <summary>📄 調査レポート・解説</summary>
+                    <div class="accordion-body">${sec.explanation}</div>
+                </details>
+            ` : ''}
+        </div>
+    `;
+
+    if (!isCleared) {
+        document.getElementById("answerInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") submitAnswer();
+        });
     }
-  });
-
-  if (index === q.answer) {
-    score++;
-  }
-
-  $("scoreText").textContent = `正解 ${score}`;
-  $("explanation").classList.remove("hidden");
-  $("nextBtn").classList.remove("hidden");
-
-  const lastQuestion =
-    currentPart === parts.length - 1 &&
-    currentQuestion === parts[currentPart].questions.length - 1;
-
-  $("nextBtn").textContent =
-    lastQuestion ? "FINALへ →" : "次の問題 →";
 }
 
-function nextQuestion() {
-  currentQuestion++;
+function submitAnswer() {
+    const input = document.getElementById("answerInput");
+    const errorAlert = document.getElementById("errorAlert");
+    if (!input) return;
 
-  if (currentQuestion >= parts[currentPart].questions.length) {
-    currentPart++;
-    currentQuestion = 0;
-  }
+    const val = input.value.trim().toLowerCase();
+    const sec = SECTORS[currentSectorId];
 
-  render();
+    const isMatch = sec.answers.some(ans => ans.toLowerCase().trim() === val);
+
+    if (isMatch) {
+        errorAlert.style.display = "none";
+        if (!clearedList.includes(sec.id)) {
+            clearedList.push(sec.id);
+            localStorage.setItem("jw_cleared_list", JSON.stringify(clearedList));
+        }
+        showSuccessModal(sec);
+    } else {
+        errorAlert.style.display = "block";
+    }
 }
 
-function renderFinalPart() {
-  $("quizCard").classList.remove("hidden");
-  $("resultCard").classList.add("hidden");
+function showSuccessModal(sec) {
+    const modal = document.getElementById("modalLayer");
+    const card = document.getElementById("modalCard");
+    const title = document.getElementById("modalTitle");
+    const desc = document.getElementById("modalDesc");
+    const btn = document.getElementById("modalBtn");
 
-  $("questionNumber").textContent = "FINAL";
-  $("progressText").textContent = "FINAL";
-  $("scoreText").textContent = `正解 ${score}`;
+    if (sec.id === SECTORS.length - 1) {
+        card.classList.add("final");
+        title.innerText = "🦖 MISSION COMPLETE!";
+        title.style.color = "var(--jurassic-amber)";
+        desc.innerText = `チーム【${teamName}】の皆さん、お見事です！\n全区画のセキュリティ再起動に成功しました。\n\n端末を持ったまま【本部受付】へ向かい、クリアの証を受け取ってください！`;
+        btn.innerText = "最終結果画面へ";
+    } else {
+        card.classList.remove("final");
+        title.innerText = "ACCESS GRANTED";
+        title.style.color = "var(--jurassic-green)";
+        const nextSec = SECTORS[sec.id + 1];
+        desc.innerText = `【${sec.name}】の調査データを取得しました！\n\n次の区画のアクセス制限が解除されました。\n${nextSec.location}`;
+        btn.innerText = `「${nextSec.shortName}」へ進む`;
+    }
 
-  $("progressBar").style.width = "100%";
-
-  $("question").textContent =
-    clean(finalPart.title) + "\n\n" + clean(finalPart.question);
-
-  $("choices").innerHTML = "";
-
-  // 最終回答を入力して答え合わせ
-  const input = document.createElement("input");
-  input.id = "finalInput";
-  input.type = "text";
-  input.placeholder = "最終回答を入力";
-  input.autocomplete = "off";
-  input.style.cssText =
-    "width:100%;padding:16px;border:2px solid #e3e7ef;border-radius:14px;font:inherit;font-size:18px;";
-
-  $("choices").appendChild(input);
-
-  const submit = document.createElement("button");
-  submit.className = "next";
-  submit.textContent = "最終回答を確認";
-  submit.addEventListener("click", checkFinalAnswer);
-  $("choices").appendChild(submit);
-
-  $("hint").textContent = clean(finalPart.hint);
-  $("hint").classList.add("hidden");
-  $("hintBtn").classList.remove("hidden");
-  $("hintBtn").textContent = "💡 ヒントを見る";
-
-  $("explanation").classList.add("hidden");
-  $("nextBtn").classList.add("hidden");
+    modal.style.display = "flex";
 }
 
-function checkFinalAnswer() {
-  const input = $("finalInput");
-  const userAnswer = input.value.trim();
-  const correctAnswer = finalPart.answer.trim();
-
-  if (!userAnswer) {
-    input.focus();
-    return;
-  }
-
-  const explanation = $("explanation");
-
-  if (userAnswer.toUpperCase() === correctAnswer.toUpperCase()) {
-    score++;
-    explanation.textContent =
-      `${clean(finalPart.explanation)}\n\n正解：${correctAnswer}`;
-    explanation.classList.remove("hidden");
-
-    input.disabled = true;
-
-    const button = document.querySelector("#choices .next");
-    button.disabled = true;
-    button.textContent = "正解！";
-
-    $("nextBtn").classList.remove("hidden");
-    $("nextBtn").textContent = "結果を見る →";
-    $("nextBtn").onclick = showResult;
-  } else {
-    explanation.textContent =
-      "答えが一致しません。4つのPARTの答えをもう一度確認してください。";
-    explanation.classList.remove("hidden");
-  }
+function nextFromModal() {
+    document.getElementById("modalLayer").style.display = "none";
+    goToNextSector();
 }
 
-function showResult() {
-  $("quizCard").classList.add("hidden");
-  $("resultCard").classList.remove("hidden");
-
-  $("finalScore").textContent = score;
-  $("finalTotal").textContent = totalQuestions + 1;
-
-  $("resultMessage").textContent =
-    `FINAL ANSWER：${finalPart.answer}`;
+function goToNextSector() {
+    if (currentSectorId < SECTORS.length - 1) {
+        currentSectorId++;
+        localStorage.setItem("jw_current_id", currentSectorId);
+    }
+    renderNavigation();
+    renderSector(currentSectorId);
 }
 
-function restart() {
-  currentPart = 0;
-  currentQuestion = 0;
-  score = 0;
-  render();
+function confirmReset() {
+    if (confirm("【管理者用】\nチームデータと進行状況をすべて初期化し、次のチームに渡せる状態に戻しますか？")) {
+        localStorage.clear();
+        teamName = "";
+        clearedList = [];
+        currentSectorId = 0;
+        renderTeamSetup();
+    }
 }
-
-$("hintBtn").addEventListener("click", () => {
-  $("hint").classList.toggle("hidden");
-
-  $("hintBtn").textContent =
-    $("hint").classList.contains("hidden")
-      ? "💡 ヒントを見る"
-      : "💡 ヒントを隠す";
-});
-
-$("restartBtn").addEventListener("click", restart);
-
-render();
