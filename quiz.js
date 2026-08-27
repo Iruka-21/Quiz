@@ -1,6 +1,6 @@
 /* =========================================================================
    ISLA NUBLAR RESEARCH LAB — QUIZ EXPEDITION
-   quiz.js (完全版・QRデータ埋め込み・supported by対応)
+   quiz.js (QRコードURL短縮版・全データ完備)
    ========================================================================= */
 
 /* ============================== 1. CONFIG =============================== */
@@ -10,8 +10,7 @@ const CONFIG = {
   ADMIN_PASSCODE: 'admin', // ★★★ 必ず変更してください ★★★
   SECTOR_COUNT: 4,
   GAME_NAME: 'ISLA NUBLAR RESEARCH LAB',
-  // ★★★ ここに協賛・実行委員会名を入れてください（空文字で非表示） ★★★
-  SUPPORTED_BY: '文化祭実行委員会',
+  SUPPORTED_BY: '文化祭実行委員会', // 空文字にすると非表示
 };
 
 /* --------------------------------------------------------------------------
@@ -704,7 +703,12 @@ function formatDuration(ms) {
   return `${m}分${String(s).padStart(2, '0')}秒`;
 }
 
-function formatDate(ts) {
+function formatDateShort(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+}
+
+function formatDateDisplay(ts) {
   const d = new Date(ts);
   return d.getFullYear() + '年' + String(d.getMonth() + 1).padStart(2, '0') + '月' + String(d.getDate()).padStart(2, '0') + '日';
 }
@@ -716,7 +720,8 @@ function renderCompleteScreen() {
 
   const duration = state.completedAt && state.createdAt ? state.completedAt - state.createdAt : 0;
   const score = calculateScore(duration);
-  const dateStr = formatDate(state.completedAt || Date.now());
+  const dateDisplay = formatDateDisplay(state.completedAt || Date.now());
+  const dateShort = formatDateShort(state.completedAt || Date.now());
   const gameName = CONFIG.GAME_NAME;
   const supportedBy = CONFIG.SUPPORTED_BY || '';
 
@@ -724,34 +729,32 @@ function renderCompleteScreen() {
   document.getElementById('complete-duration').textContent = formatDuration(duration);
   document.getElementById('complete-score').textContent = score.toLocaleString() + ' pt';
   document.getElementById('complete-code').textContent = state.clues.map((c) => c.code).join(' - ');
-  document.getElementById('complete-date').textContent = dateStr;
+  document.getElementById('complete-date').textContent = dateDisplay;
   document.getElementById('complete-game-name').textContent = gameName;
   document.getElementById('complete-supported-by').textContent = supportedBy ? 'supported by ' + supportedBy : '';
 
   const listEl = document.getElementById('complete-clue-list');
   listEl.innerHTML = state.clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
 
-  // QRコード用URL生成
+  // ★★★ QRコード用URLを短縮 ★★★
   const baseUrl = window.location.origin + window.location.pathname;
   const params = new URLSearchParams();
-  params.set('qr', '1');
-  params.set('team', state.teamName);
-  params.set('score', String(score));
-  params.set('date', dateStr);
-  params.set('game', gameName);
-  params.set('clues', JSON.stringify(state.clues));
-  const columnUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
-  params.set('column', columnUrl);
+  params.set('t', state.teamName);
+  params.set('s', String(score));
+  params.set('d', dateShort);
+  params.set('g', gameName);
+  const codeStr = state.clues.map((c) => c.code).join(',');
+  params.set('c', codeStr);
   const qrUrl = baseUrl + '?' + params.toString();
 
-  // ページURL用QRコード
+  // ページURL用QRコード（150px）
   const pageContainer = document.getElementById('qr-page-url');
   pageContainer.innerHTML = '';
   try {
     new QRCode(pageContainer, {
       text: qrUrl,
-      width: 100,
-      height: 100,
+      width: 150,
+      height: 150,
       colorDark: '#000000',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.H,
@@ -764,10 +767,11 @@ function renderCompleteScreen() {
   const columnContainer = document.getElementById('qr-column-url');
   columnContainer.innerHTML = '';
   try {
+    const columnUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
     new QRCode(columnContainer, {
       text: columnUrl,
-      width: 100,
-      height: 100,
+      width: 150,
+      height: 150,
       colorDark: '#000000',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.H,
@@ -776,7 +780,7 @@ function renderCompleteScreen() {
     columnContainer.innerHTML = '<p style="font-size:11px;color:var(--c-text-dim);">QR生成エラー</p>';
   }
 
-  const isQR = new URLSearchParams(window.location.search).get('qr') === '1';
+  const isQR = new URLSearchParams(window.location.search).get('t') !== null;
   const subEl = document.getElementById('complete-sub');
   if (isQR) {
     subEl.textContent = '📱 スマートフォンからアクセス中 — 「結果を画像で保存」でダウンロードできます。';
@@ -788,32 +792,42 @@ function renderCompleteScreen() {
 /* ============================ QRコードアクセス用表示 ============================ */
 
 function renderCompleteScreenWithParams(params) {
-  const team = params.get('team') || 'Unknown';
-  const score = params.get('score') || '0';
-  const date = params.get('date') || formatDate(Date.now());
-  const game = params.get('game') || CONFIG.GAME_NAME;
-  const clues = JSON.parse(params.get('clues') || '[]');
+  const team = params.get('t') || 'Unknown';
+  const score = params.get('s') || '0';
+  const dateShort = params.get('d') || formatDateShort(Date.now());
+  const game = params.get('g') || CONFIG.GAME_NAME;
+  const codeStr = params.get('c') || '';
   const supportedBy = CONFIG.SUPPORTED_BY || '';
+
+  const codes = codeStr.split(',').filter(s => s.length > 0);
+  const clues = codes.map((code, index) => ({
+    sectorName: ['一区画', '二区画', '三区画', '四区画'][index] || '区画' + (index + 1),
+    code: code,
+  }));
+
+  const dateDisplay = dateShort.length === 8
+    ? dateShort.slice(0,4) + '年' + dateShort.slice(4,6) + '月' + dateShort.slice(6,8) + '日'
+    : dateShort;
 
   document.getElementById('complete-team-name').textContent = team;
   document.getElementById('complete-duration').textContent = '--';
   document.getElementById('complete-score').textContent = Number(score).toLocaleString() + ' pt';
-  document.getElementById('complete-code').textContent = clues.map((c) => c.code).join(' - ');
-  document.getElementById('complete-date').textContent = date;
+  document.getElementById('complete-code').textContent = codes.join(' - ');
+  document.getElementById('complete-date').textContent = dateDisplay;
   document.getElementById('complete-game-name').textContent = game;
   document.getElementById('complete-supported-by').textContent = supportedBy ? 'supported by ' + supportedBy : '';
 
   const listEl = document.getElementById('complete-clue-list');
   listEl.innerHTML = clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
 
-  // QRコードの再生成（現在のURL）
+  // 現在のURLをQRコード化
   const pageContainer = document.getElementById('qr-page-url');
   pageContainer.innerHTML = '';
   try {
     new QRCode(pageContainer, {
       text: window.location.href,
-      width: 100,
-      height: 100,
+      width: 150,
+      height: 150,
       colorDark: '#000000',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.H,
@@ -828,8 +842,8 @@ function renderCompleteScreenWithParams(params) {
     const columnUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
     new QRCode(columnContainer, {
       text: columnUrl,
-      width: 100,
-      height: 100,
+      width: 150,
+      height: 150,
       colorDark: '#000000',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.H,
@@ -1022,15 +1036,19 @@ function init() {
   bindEvents();
 
   const params = new URLSearchParams(window.location.search);
-  if (params.get('qr') === '1') {
-    // QRコードからのアクセス
+  // 短縮パラメータ（t）でQRアクセス判定
+  if (params.get('t') !== null) {
     state = createDefaultState();
-    state.teamName = params.get('team') || 'Unknown';
+    state.teamName = params.get('t') || 'Unknown';
     state.completedAt = Date.now();
     state.createdAt = Date.now() - 0;
     state.clearedSectors = 4;
     state.finalCleared = true;
-    state.clues = JSON.parse(params.get('clues') || '[]');
+    const codeStr = params.get('c') || '';
+    state.clues = codeStr.split(',').filter(s => s.length > 0).map((code, index) => ({
+      sectorName: ['一区画', '二区画', '三区画', '四区画'][index] || '区画' + (index + 1),
+      code: code,
+    }));
     state.selectedPatterns = [0, 0, 0, 0];
 
     showScreen('complete');
