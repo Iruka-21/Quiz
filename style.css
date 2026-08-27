@@ -1,6 +1,6 @@
 /* =========================================================================
    ISLA NUBLAR RESEARCH LAB — QUIZ EXPEDITION
-   style.css
+   style.css (完全版・QR背景白対応)
    ========================================================================= */
 
 :root {
@@ -206,7 +206,6 @@ input {
 }
 #screen-dashboard.active { display: flex; }
 
-/* --- トップバー --- */
 .topbar {
   position: relative;
   z-index: 2;
@@ -240,7 +239,6 @@ input {
 }
 .btn-topbar:hover { background: rgba(56, 189, 248, 0.2); }
 
-/* --- メインエリア --- */
 .dashboard-main {
   position: relative;
   z-index: 1;
@@ -267,7 +265,6 @@ input {
 .panel-header small { color: var(--c-text-dim); font-size: 10px; }
 .panel-header-icon { font-size: 18px; }
 
-/* --- 指示書パネル（六角形風フレーム） --- */
 .briefing-panel {
   position: relative;
   background: linear-gradient(160deg, var(--c-bg-panel), var(--c-bg-panel-alt));
@@ -314,7 +311,6 @@ input {
   border-radius: 0 6px 6px 0;
 }
 
-/* --- STATUSパネル --- */
 .status-panel {
   background: linear-gradient(160deg, var(--c-bg-panel), var(--c-bg-panel-alt));
   border: 1px solid var(--c-border);
@@ -418,7 +414,6 @@ input {
 .clue-sector { color: var(--c-text); }
 .clue-code { color: var(--c-amber); font-family: var(--font-display); font-weight: 700; }
 
-/* --- 区画カード一覧 --- */
 .sector-cards-section {
   position: relative;
   z-index: 1;
@@ -471,7 +466,6 @@ input {
 .sector-card.final-card { border-color: var(--c-amber); }
 .sector-card.final-card.active { border-color: var(--c-amber); box-shadow: 0 0 16px rgba(245, 158, 11, 0.6); }
 
-/* --- アクションバー --- */
 .action-bar {
   position: relative;
   z-index: 1;
@@ -576,7 +570,7 @@ input {
 .complete-note { font-size: 12px; color: var(--c-text-dim); }
 
 /* ============================================================
-   🚨 緊急ロック画面（ADMINボタンを動作させるための透過設定）
+   緊急ロック画面
    ============================================================ */
 .lock-screen {
   position: fixed;
@@ -587,7 +581,7 @@ input {
   justify-content: center;
   background: #1a0305;
   text-align: center;
-  pointer-events: none !important; /* 背景全体を透過し、下のADMINボタンをクリック可能にする */
+  pointer-events: none !important;
 }
 .lock-screen.active { display: flex; }
 .lock-strobe {
@@ -602,7 +596,7 @@ input {
   position: relative;
   z-index: 1;
   padding: 24px;
-  pointer-events: none; /* テキスト領域もクリックを透過（ただしテキスト選択はできない） */
+  pointer-events: none;
 }
 .lock-icon { font-size: 72px; margin-bottom: 12px; animation: shake 0.5s infinite; }
 @keyframes shake {
@@ -623,7 +617,7 @@ input {
 .lock-desc { font-size: 14px; color: #ffb3b3; }
 
 /* ============================================================
-   🔁 再開オーバーレイ
+   再開オーバーレイ
    ============================================================ */
 .resume-overlay {
   position: fixed;
@@ -699,7 +693,6 @@ input {
 .howto-list li, .notice-list li { margin-bottom: 10px; }
 .notice-list li b { color: var(--c-red); }
 
-/* --- クイズモーダル --- */
 .quiz-question {
   font-size: 15px;
   line-height: 1.9;
@@ -737,7 +730,6 @@ input {
   cursor: pointer;
 }
 
-/* --- FINALモーダル --- */
 .final-clue-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .final-clue-chip {
   background: rgba(245, 158, 11, 0.1);
@@ -749,12 +741,12 @@ input {
 }
 .final-clue-chip b { color: var(--c-amber); font-family: var(--font-display); }
 
-/* --- ADMINモーダル --- */
+/* --- ADMIN --- */
 .btn-admin-fixed {
   position: fixed;
   bottom: 16px;
   right: 16px;
-  z-index: 99999 !important; /* ロック画面(9999)より確実に前面に */
+  z-index: 99999 !important;
   padding: 10px 14px;
   font-size: 12px;
   background: rgba(9, 19, 26, 0.55);
@@ -786,7 +778,28 @@ input {
 .btn-admin-danger:hover { background: rgba(255, 51, 68, 0.18); }
 
 /* ============================================================
-   レスポンシブ / タブレット最適化
+   ★ 追加：QRコード背景を白に強制 ★
+   ============================================================ */
+#qr-page-url img,
+#qr-column-url img {
+  background: #ffffff !important;
+  padding: 6px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  width: 110px;
+  height: 110px;
+}
+
+#btn-download-result {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#btn-download-result:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.7) !important;
+}
+
+/* ============================================================
+   レスポンシブ
    ============================================================ */
 @media (max-width: 900px) {
   .dashboard-main { grid-template-columns: 1fr; }
@@ -801,45 +814,13 @@ input {
   .btn-action-primary { flex: 1 1 100%; order: -1; }
   .topbar { flex-wrap: wrap; gap: 8px; }
   .site-title { font-size: 22px; }
+  #qr-page-url img,
+  #qr-column-url img {
+    width: 80px;
+    height: 80px;
+  }
 }
 
-/* スクロールバー（見た目調整） */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(43, 240, 120, 0.3); border-radius: 4px; }
-/* ============================================================
-   追加：ダウンロードボタン・QRコードエリア
-   ============================================================ */
-#btn-download-result {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-#btn-download-result:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 30px rgba(245, 158, 11, 0.7) !important;
-}
-#qr-code-container img {
-  border-radius: 8px;
-  background: #fff;
-  padding: 6px;
-}
-/* ============================================================
-   追加：QRコードグリッド / スコア強調
-   ============================================================ */
-#btn-download-result {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-#btn-download-result:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 30px rgba(245, 158, 11, 0.7) !important;
-}
-#qr-page-url img, #qr-column-url img {
-  border-radius: 8px;
-  background: #fff;
-  padding: 4px;
-  width: 100px;
-  height: 100px;
-}
-/* スコア表示の強調 */
-#complete-score {
-  letter-spacing: 2px;
-}
