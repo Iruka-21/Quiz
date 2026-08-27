@@ -807,3 +807,18 @@ input {
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(43, 240, 120, 0.3); border-radius: 4px; }
+/* ============================================================
+   追加：ダウンロードボタン・QRコードエリア
+   ============================================================ */
+#btn-download-result {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#btn-download-result:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.7) !important;
+}
+#qr-code-container img {
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px;
+}
