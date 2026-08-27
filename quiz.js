@@ -18,7 +18,7 @@
 const CONFIG = {
   STORAGE_KEY: 'jw_quiz_expedition_state_v1',
   // ★★★ 編集エリア：管理者パスワードを変更する ★★★
-  ADMIN_PASSCODE: 'CHANGE_ME', // 🔑 ここを任意のパスワードに変更してください
+  ADMIN_PASSCODE: 'admin', // 🔑 ここを任意のパスワードに変更してください
   SECTOR_COUNT: 4,
 };
 
