@@ -17,7 +17,7 @@
 
 const CONFIG = {
   STORAGE_KEY: 'jw_quiz_expedition_state_v1',
-  ADMIN_PASSCODE: 'admin', // 🔑 管理者パスコード（必要に応じて変更してください）
+  ADMIN_PASSCODE: 'CHANGE_ME', // 🔑 管理者パスコード（必ず変更してください）
   SECTOR_COUNT: 4,
 };
 
@@ -734,7 +734,7 @@ function renderCompleteScreen() {
   document.getElementById('complete-team-name').textContent = state.teamName;
   const duration = state.completedAt && state.createdAt ? state.completedAt - state.createdAt : 0;
   document.getElementById('complete-duration').textContent = formatDuration(duration);
-  document.getElementById('complete-code').textContent = state.clues.map((c) => c.code).join('-');
+  document.getElementById('complete-code').textContent = state.clues.map((c) => c.code).join(' - ');
   const listEl = document.getElementById('complete-clue-list');
   listEl.innerHTML = state.clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
 }
@@ -770,8 +770,9 @@ function handleStartTeam() {
   showScreen('dashboard');
   renderAll();
 
-  // 登録ボタン押下は正規のユーザー操作なので、ここでフルスクリーンをリクエストする
+  // フルスクリーン化（ユーザー操作起点なので許可されやすい）
   enterFullscreenSafe();
+  // セキュリティ監視を開始（フルスクリーンが拒否されても開始されるが、READMEで説明済み）
   armSecurity();
 }
 
