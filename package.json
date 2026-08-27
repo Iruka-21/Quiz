@@ -1,0 +1,23 @@
+{
+  "name": "primary",
+  "version": "1.0.0",
+  "description": "文化祭・校内周遊型リアル謎解きゲーム用のタブレット向けWebアプリケーションです。 ジュラシック・ワールドの研究施設をテーマに、チームごとにタブレット端末を1台使い、 校内4区画（＋FINAL）を巡って謎を解いていきます。",
+  "main": "quiz.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Iruka-21/Quiz.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Iruka-21/Quiz/issues"
+  },
+  "homepage": "https://github.com/Iruka-21/Quiz#readme",
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
+  }
+}
