@@ -1,6 +1,6 @@
 /* =========================================================================
    ISLA NUBLAR RESEARCH LAB — QUIZ EXPEDITION
-   quiz.js (完全版・QR背景白対応)
+   quiz.js (完全版・QR白黒対応)
    ========================================================================= */
 
 /* ============================== 1. CONFIG =============================== */
@@ -694,7 +694,7 @@ function calculateScore(ms) {
   return 5000;
 }
 
-/* ============================ 完了画面（スコア・QR・DL） ============================ */
+/* ============================ 完了画面（スコア・QR白黒・DL） ============================ */
 
 function formatDuration(ms) {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -714,7 +714,7 @@ function renderCompleteScreen() {
   const listEl = document.getElementById('complete-clue-list');
   listEl.innerHTML = state.clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
 
-  // ★ 1. ページURLのQRコード（背景白）
+  // ★ 1. ページURLのQRコード（白黒）
   const pageContainer = document.getElementById('qr-page-url');
   pageContainer.innerHTML = '';
   try {
@@ -723,15 +723,15 @@ function renderCompleteScreen() {
       text: pageUrl,
       width: 100,
       height: 100,
-      colorDark: '#2bf078',
-      colorLight: '#ffffff', // ★ 白背景に変更
+      colorDark: '#000000',   // ★ 黒
+      colorLight: '#ffffff',  // ★ 白
       correctLevel: QRCode.CorrectLevel.H,
     });
   } catch (e) {
     pageContainer.innerHTML = '<p style="font-size:11px;color:var(--c-text-dim);">QR生成エラー</p>';
   }
 
-  // ★ 2. コラムURLのQRコード（背景白）
+  // ★ 2. コラムURLのQRコード（白黒）
   const columnContainer = document.getElementById('qr-column-url');
   columnContainer.innerHTML = '';
   try {
@@ -740,8 +740,8 @@ function renderCompleteScreen() {
       text: columnUrl,
       width: 100,
       height: 100,
-      colorDark: '#f59e0b',
-      colorLight: '#ffffff', // ★ 白背景に変更
+      colorDark: '#000000',   // ★ 黒
+      colorLight: '#ffffff',  // ★ 白
       correctLevel: QRCode.CorrectLevel.H,
     });
   } catch (e) {
@@ -749,7 +749,7 @@ function renderCompleteScreen() {
   }
 }
 
-/* ============================ 画像ダウンロード（スコア＋コラムQR・背景白） ============================ */
+/* ============================ 画像ダウンロード（スコア＋白黒QR） ============================ */
 
 function downloadResultImage() {
   const team = state.teamName || 'Unknown';
@@ -809,12 +809,12 @@ function downloadResultImage() {
   ctx.font = '16px Noto Sans JP, sans-serif';
   ctx.fillText('© ISLA NUBLAR RESEARCH LAB', 40, h - 30);
 
-  // ★ コラムQRコードを画像に埋め込み（背景白を指定）
+  // ★ コラムQRコード（白黒）を画像に埋め込み
   const columnUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
   const qrImg = new Image();
   qrImg.crossOrigin = 'Anonymous';
-  // bgcolor=ffffff で背景白を指定
-  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&bgcolor=ffffff&color=2bf078&data=' + encodeURIComponent(columnUrl);
+  // color=000000 で黒、bgcolor=ffffff で白背景
+  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&bgcolor=ffffff&color=000000&data=' + encodeURIComponent(columnUrl);
   
   qrImg.onload = function() {
     ctx.drawImage(qrImg, w - 220, 120, 160, 160);
