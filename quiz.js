@@ -1,31 +1,19 @@
 /* =========================================================================
    ISLA NUBLAR RESEARCH LAB — QUIZ EXPEDITION
-   quiz.js
-   -------------------------------------------------------------------------
-   文化祭・校内周遊リアル謎解きゲーム用スクリプト
-   構成:
-     1. CONFIG / 指示書・問題プール データ定義  ← 制作担当者はここを編集
-     2. 状態管理 (localStorage)
-     3. 入力正規化・判定ロジック
-     4. セキュリティ (フルスクリーン / 離脱検知 / 操作禁止 / 緊急ロック)
-     5. 管理者 (ADMIN) 機能
-     6. UI描画・画面制御
-     7. イベントバインド / 初期化
+   quiz.js (完全版)
    ========================================================================= */
 
 /* ============================== 1. CONFIG =============================== */
 
 const CONFIG = {
   STORAGE_KEY: 'jw_quiz_expedition_state_v1',
-  // ★★★ 編集エリア：管理者パスワードを変更する ★★★
-  // デフォルトは 'admin' ですが、必ず独自のパスワードに変更してください！
-  ADMIN_PASSCODE: 'admin', // 🔑 ここを任意のパスワードに変更してください
+  ADMIN_PASSCODE: 'admin', // ★ 必ず変更してください
   SECTOR_COUNT: 4,
 };
 
 /* --------------------------------------------------------------------------
    📋 SECTOR_POOLS — 区画ごとの指示書＆問題プール
-   ★★★ 編集エリア：問題・指示書の編集は以下の SECTOR_POOLS 内で行います ★★★
+   ★★★ 編集エリア：問題・指示書の編集はここで行います ★★★
    -------------------------------------------------------------------------- */
 const SECTOR_POOLS = [
   {
@@ -41,24 +29,17 @@ const SECTOR_POOLS = [
       '現地の展示パネルに残された足跡と記録を調査し、逃走した草食竜を特定してセキュリティコードを解読せよ。\n' +
       '解読したコードはこの端末のQUIZ入力欄へ送信すること。',
     patterns: [
-      // ========== パターンA ==========
       {
         patternName: 'A',
         title: '一区画：ジャングルエリア (Pattern A)',
-        // 問題文（編集可）
         question:
           'パドックの記録には「体長20m級。小さな頭部と長い首を持つ、竜脚類の中でも屈指の大きさを誇る草食竜」と記されている。\n' +
           'この恐竜の名前を英語（アルファベット）で入力せよ。',
-        // 正解バリエーション（編集可：複数追加可能）
         answers: ['BRACHIOSAURUS', 'ブラキオサウルス'],
-        // ヒント（編集可）
         hint: 'ヒント：首がとても長く、キリンのように高い木の葉を食べる巨大な竜脚類だ。',
-        // 解説（編集可）
         explanation: '正解は「ブラキオサウルス」。竜脚類の中でも特に首が長く、映画シリーズの象徴的存在として度々登場する草食恐竜だ。',
-        // 起動コードの欠片（編集可）
         clueCode: 'J7',
       },
-      // ========== パターンB ==========
       {
         patternName: 'B',
         title: '一区画：ジャングルエリア (Pattern B)',
@@ -84,7 +65,6 @@ const SECTOR_POOLS = [
       '次の調査エリアは 2階 図書室前 の「リバー・アドベンチャー」乗船口だ。\n' +
       '水位センサーが異常な水しぶきを検知している。ログに残された痕跡を調査し、氾濫の原因となった水棲の爬虫類を特定せよ。',
     patterns: [
-      // ========== パターンA ==========
       {
         patternName: 'A',
         title: '二区画：リバーエリア (Pattern A)',
@@ -96,7 +76,6 @@ const SECTOR_POOLS = [
         explanation: '正解は「スピノサウルス」。背中の棘状突起（帆）と細長い顎が特徴で、水辺を生活圏とする肉食恐竜だ。',
         clueCode: 'R9',
       },
-      // ========== パターンB ==========
       {
         patternName: 'B',
         title: '二区画：リバーエリア (Pattern B)',
@@ -122,7 +101,6 @@ const SECTOR_POOLS = [
       '巨大な鳥かご式ドーム「アビアリー」のゲートが開放状態になっている。3階 視聴覚室前 へ急行せよ。\n' +
       'ドーム内に残された鳴き声データを解析し、逃走した翼竜を突き止めよ。',
     patterns: [
-      // ========== パターンA ==========
       {
         patternName: 'A',
         title: '三区画：アビアリーエリア (Pattern A)',
@@ -134,7 +112,6 @@ const SECTOR_POOLS = [
         explanation: '正解は「プテラノドン」。歯のないクチバシと後頭部の大きなトサカが特徴的な、代表的な翼竜だ。',
         clueCode: 'A2',
       },
-      // ========== パターンB ==========
       {
         patternName: 'B',
         title: '三区画：アビアリーエリア (Pattern B)',
@@ -160,7 +137,6 @@ const SECTOR_POOLS = [
       '最終調査区画は 特別棟1階 理科室 の「創世研究ラボ」だ。\n' +
       '遺伝子シーケンサーに残されたロック画面のクイズに正解し、最終起動コードの最後の欠片を入手せよ。',
     patterns: [
-      // ========== パターンA ==========
       {
         patternName: 'A',
         title: '四区画：ラボエリア (Pattern A)',
@@ -172,7 +148,6 @@ const SECTOR_POOLS = [
         explanation: '正解は「蚊」。琥珀に閉じ込められた古代の蚊の体内に残る血液から、恐竜のDNAが採取されたという設定だ。',
         clueCode: 'L5',
       },
-      // ========== パターンB ==========
       {
         patternName: 'B',
         title: '四区画：ラボエリア (Pattern B)',
@@ -188,7 +163,7 @@ const SECTOR_POOLS = [
   },
 ];
 
-/* ★★★ 編集エリア：FINAL区画の指示書を編集する場合 ★★★ */
+/* ★★★ FINAL区画 ★★★ */
 const FINAL_SECTOR = {
   id: 'final',
   name: 'FINAL',
@@ -204,14 +179,13 @@ const FINAL_SECTOR = {
 
 /* ============================== 2. 状態管理 =============================== */
 
-/** デフォルト状態を生成 */
 function createDefaultState() {
   return {
     teamName: '',
     createdAt: null,
-    selectedPatterns: [],   // 各区画で選ばれた patterns[] のインデックス
-    clearedSectors: 0,      // クリア済み区画数 (0-4)
-    clues: [],               // { sectorName, code } を収集順に格納
+    selectedPatterns: [],
+    clearedSectors: 0,
+    clues: [],
     wrongAttempts: [0, 0, 0, 0],
     finalCleared: false,
     completedAt: null,
@@ -288,12 +262,10 @@ function enterFullscreenSafe() {
     if (req) {
       const p = req.call(el);
       if (p && typeof p.catch === 'function') {
-        p.catch(() => { /* iOS Safari 等 非対応環境はフォールバックして無視 */ });
+        p.catch(() => { /* 非対応環境は無視 */ });
       }
     }
-  } catch (e) {
-    /* フルスクリーンAPI非対応環境でも処理を止めない */
-  }
+  } catch (e) { /* 無視 */ }
 }
 
 function exitFullscreenSafe() {
@@ -303,15 +275,11 @@ function exitFullscreenSafe() {
       const p = ex.call(document);
       if (p && typeof p.catch === 'function') p.catch(() => {});
     }
-  } catch (e) { /* noop */ }
+  } catch (e) { /* 無視 */ }
 }
 
-function armSecurity() {
-  securityArmed = true;
-}
-function disarmSecurity() {
-  securityArmed = false;
-}
+function armSecurity() { securityArmed = true; }
+function disarmSecurity() { securityArmed = false; }
 
 function triggerViolation(reason) {
   if (!securityArmed) return;
@@ -357,7 +325,7 @@ function attachSecurityListeners() {
   });
 }
 
-/* ============================ 5. 管理者 (ADMIN) ============================ */
+/* ============================ 5. ADMIN ============================ */
 
 let adminAuthenticated = false;
 
@@ -382,7 +350,6 @@ function closeAdminModal() {
 function submitAdminPasscode() {
   const passInput = document.getElementById('admin-passcode-input');
   const errorEl = document.getElementById('admin-auth-error');
-  // ★ 入力値の前後スペースを除去して比較（誤入力を防ぐ）
   const val = passInput ? passInput.value.trim() : '';
   if (val === CONFIG.ADMIN_PASSCODE) {
     adminAuthenticated = true;
@@ -418,7 +385,7 @@ function adminResetDevice() {
   setTimeout(() => { adminActionInProgress = false; }, 800);
 }
 
-/* ============================ 6. UI描画・画面制御 ============================ */
+/* ============================ 6. UI描画 ============================ */
 
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
@@ -584,7 +551,7 @@ function renderAll() {
   renderActionBar();
 }
 
-/* -------- クイズモーダル -------- */
+/* ============================ クイズ ============================ */
 
 function openQuizModal() {
   if (viewIndex === 4) {
@@ -679,7 +646,7 @@ function submitQuizAnswer() {
   }
 }
 
-/* -------- FINALモーダル -------- */
+/* ============================ FINAL ============================ */
 
 function openFinalModal() {
   document.getElementById('final-clue-list').innerHTML = state.clues
@@ -715,7 +682,7 @@ function submitFinalAnswer() {
   }
 }
 
-/* -------- 完了画面 -------- */
+/* ============================ 完了画面（スコア・QR・画像DL） ============================ */
 
 function formatDuration(ms) {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -731,18 +698,115 @@ function renderCompleteScreen() {
   document.getElementById('complete-code').textContent = state.clues.map((c) => c.code).join(' - ');
   const listEl = document.getElementById('complete-clue-list');
   listEl.innerHTML = state.clues.map((c) => `<li>${c.sectorName}：<b>${c.code}</b></li>`).join('');
+
+  // QRコード生成（dino-column.htmlへ誘導）
+  const container = document.getElementById('qr-code-container');
+  container.innerHTML = '';
+  try {
+    const url = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
+    new QRCode(container, {
+      text: url,
+      width: 100,
+      height: 100,
+      colorDark: '#2bf078',
+      colorLight: '#09131a',
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+  } catch (e) {
+    container.innerHTML = '<p style="font-size:12px; color: var(--c-text-dim);">QRコードの生成に失敗しましたが、画像ダウンロードは可能です。</p>';
+  }
 }
 
-/* -------- 遊び方 / 注意事項モーダル -------- */
+// 画像ダウンロード（QRコード付き）
+function downloadResultImage() {
+  const team = state.teamName || 'Unknown';
+  const duration = document.getElementById('complete-duration').textContent;
+  const code = document.getElementById('complete-code').textContent;
 
-function openModal(id) {
-  document.getElementById(id).classList.add('active');
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('active');
+  const canvas = document.createElement('canvas');
+  const w = 800, h = 500;
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  // 背景
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, '#04080b');
+  grad.addColorStop(1, '#0d1b24');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // 枠
+  ctx.strokeStyle = '#2bf078';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(15, 15, w - 30, h - 30);
+
+  // タイトル
+  ctx.fillStyle = '#2bf078';
+  ctx.font = 'bold 36px Orbitron, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('ISLA NUBLAR LAB', 40, 80);
+  ctx.font = '18px Orbitron, sans-serif';
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillText('EXPEDITION COMPLETE', 40, 120);
+
+  // チーム名
+  ctx.fillStyle = '#d7ece4';
+  ctx.font = '28px Noto Sans JP, sans-serif';
+  ctx.fillText('TEAM: ' + team, 40, 190);
+
+  // スコア（時間）
+  ctx.fillStyle = '#f59e0b';
+  ctx.font = '24px Orbitron, sans-serif';
+  ctx.fillText('⏱ SCORE: ' + duration, 40, 250);
+
+  // コード
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 32px Orbitron, sans-serif';
+  ctx.fillText('CODE: ' + code, 40, 320);
+
+  // フッター
+  ctx.fillStyle = '#8fa8ab';
+  ctx.font = '16px Noto Sans JP, sans-serif';
+  ctx.fillText('© ISLA NUBLAR RESEARCH LAB', 40, h - 40);
+
+  // QRコード（dino-column.htmlへ）
+  const qrUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'dino-column.html';
+  const qrImg = new Image();
+  qrImg.crossOrigin = 'Anonymous';
+  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl);
+  
+  qrImg.onload = function() {
+    ctx.drawImage(qrImg, w - 220, 120, 160, 160);
+    ctx.fillStyle = '#8fa8ab';
+    ctx.font = '14px Noto Sans JP, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Scan for Dino Column', w - 140, 310);
+    downloadCanvas(canvas, team);
+  };
+  qrImg.onerror = function() {
+    // QRが読み込めなくても画像はダウンロード
+    ctx.fillStyle = '#8fa8ab';
+    ctx.font = '16px Noto Sans JP, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('QR Code unavailable', w - 140, 200);
+    downloadCanvas(canvas, team);
+  };
 }
 
-/* -------- 登録画面 -------- */
+function downloadCanvas(canvas, team) {
+  const link = document.createElement('a');
+  link.download = `expedition_${team}_${new Date().toISOString().slice(0,10)}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+/* ============================ モーダル制御 ============================ */
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+/* ============================ 登録 ============================ */
 
 function handleStartTeam() {
   const input = document.getElementById('team-name-input');
@@ -753,81 +817,59 @@ function handleStartTeam() {
     return;
   }
   errorEl.textContent = '';
-
   state = createDefaultState();
   state.teamName = name;
   state.createdAt = Date.now();
   state.selectedPatterns = SECTOR_POOLS.map((sector) => Math.floor(Math.random() * sector.patterns.length));
   saveState();
-
   viewIndex = 0;
   showScreen('dashboard');
   renderAll();
-
   enterFullscreenSafe();
   armSecurity();
 }
 
-/* -------- 再開オーバーレイ -------- */
+/* ============================ 再開オーバーレイ ============================ */
 
-function showResumeOverlay() {
-  document.getElementById('resume-overlay').classList.add('active');
-}
-function hideResumeOverlay() {
-  document.getElementById('resume-overlay').classList.remove('active');
-}
+function showResumeOverlay() { document.getElementById('resume-overlay').classList.add('active'); }
+function hideResumeOverlay() { document.getElementById('resume-overlay').classList.remove('active'); }
 
-/* ============================ 7. 初期化 / イベントバインド ============================ */
+/* ============================ イベントバインド / 初期化 ============================ */
 
 function bindEvents() {
   document.getElementById('btn-start-team').addEventListener('click', handleStartTeam);
-  document.getElementById('team-name-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleStartTeam();
-  });
+  document.getElementById('team-name-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleStartTeam(); });
 
+  document.getElementById('btn-concept').addEventListener('click', () => openModal('modal-concept'));
+  document.getElementById('btn-concept-close').addEventListener('click', () => closeModal('modal-concept'));
   document.getElementById('btn-howto').addEventListener('click', () => openModal('modal-howto'));
-  document.getElementById('btn-notice').addEventListener('click', () => openModal('modal-notice'));
   document.getElementById('btn-howto-close').addEventListener('click', () => closeModal('modal-howto'));
+  document.getElementById('btn-notice').addEventListener('click', () => openModal('modal-notice'));
   document.getElementById('btn-notice-close').addEventListener('click', () => closeModal('modal-notice'));
 
-  document.getElementById('btn-prev').addEventListener('click', () => {
-    if (viewIndex > 0) {
-      viewIndex -= 1;
-      renderAll();
-    }
-  });
-  document.getElementById('btn-next').addEventListener('click', () => {
-    if (viewIndex < maxViewIndex()) {
-      viewIndex += 1;
-      renderAll();
-    }
-  });
+  document.getElementById('btn-prev').addEventListener('click', () => { if (viewIndex > 0) { viewIndex -= 1; renderAll(); } });
+  document.getElementById('btn-next').addEventListener('click', () => { if (viewIndex < maxViewIndex()) { viewIndex += 1; renderAll(); } });
   document.getElementById('btn-quiz').addEventListener('click', openQuizModal);
 
   document.getElementById('btn-quiz-submit').addEventListener('click', submitQuizAnswer);
-  document.getElementById('quiz-answer-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') submitQuizAnswer();
-  });
-  document.getElementById('btn-quiz-hint').addEventListener('click', () => {
-    document.getElementById('quiz-hint-box').classList.remove('hidden');
-  });
+  document.getElementById('quiz-answer-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitQuizAnswer(); });
+  document.getElementById('btn-quiz-hint').addEventListener('click', () => { document.getElementById('quiz-hint-box').classList.remove('hidden'); });
   document.getElementById('btn-quiz-close').addEventListener('click', closeQuizModal);
   document.getElementById('btn-quiz-close-review').addEventListener('click', closeQuizModal);
 
   document.getElementById('btn-final-submit').addEventListener('click', submitFinalAnswer);
-  document.getElementById('final-answer-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') submitFinalAnswer();
-  });
+  document.getElementById('final-answer-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitFinalAnswer(); });
   document.getElementById('btn-final-close').addEventListener('click', closeFinalModal);
 
   document.getElementById('btn-admin-fixed').addEventListener('click', openAdminModal);
   document.getElementById('btn-admin-close').addEventListener('click', closeAdminModal);
   document.getElementById('btn-admin-auth-submit').addEventListener('click', submitAdminPasscode);
-  document.getElementById('admin-passcode-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') submitAdminPasscode();
-  });
+  document.getElementById('admin-passcode-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitAdminPasscode(); });
   document.getElementById('btn-admin-unlock').addEventListener('click', adminUnlock);
   document.getElementById('btn-admin-reset').addEventListener('click', adminResetDevice);
+
+  // 画像ダウンロード
+  document.getElementById('btn-download-result').addEventListener('click', downloadResultImage);
 
   document.getElementById('btn-resume').addEventListener('click', () => {
     enterFullscreenSafe();
@@ -836,18 +878,14 @@ function bindEvents() {
   });
 
   document.querySelectorAll('.modal-overlay[data-dismissible="true"]').forEach((overlay) => {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.classList.remove('active');
-    });
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
   });
 }
 
 function init() {
   attachSecurityListeners();
   bindEvents();
-
   state = loadState();
-
   if (state.teamName && state.completedAt) {
     showScreen('complete');
     renderCompleteScreen();
