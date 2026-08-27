@@ -1,50 +1,334 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Quiz</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JURASSIC RESEARCH TERMINAL</title>
+    <style>
+        :root {
+            --bg-dark: #0a0d11;
+            --panel-bg: #121820;
+            --panel-border: #1e293b;
+            --jurassic-amber: #e59819;
+            --jurassic-green: #00e676;
+            --jurassic-red: #ff334b;
+            --jurassic-cyan: #00e5ff;
+            --text-main: #e2e8f0;
+            --text-sub: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", "Segoe UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-image: 
+                radial-gradient(ellipse at top, rgba(229, 152, 25, 0.08), transparent 60%),
+                linear-gradient(rgba(18, 24, 32, 0.5) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(18, 24, 32, 0.5) 1px, transparent 1px);
+            background-size: 100% 100%, 24px 24px, 24px 24px;
+        }
+
+        .terminal-container {
+            width: 100%;
+            max-width: 640px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(229, 152, 25, 0.1);
+        }
+
+        /* 施設ヘッダー */
+        .terminal-header {
+            background: #070a0d;
+            border-bottom: 2px solid var(--jurassic-amber);
+            padding: 16px;
+            text-align: center;
+            position: relative;
+        }
+
+        .facility-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            background: rgba(229, 152, 25, 0.15);
+            color: var(--jurassic-amber);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--jurassic-amber);
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .terminal-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(229, 152, 25, 0.5);
+        }
+
+        .terminal-status-banner {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--jurassic-cyan);
+            font-family: monospace;
+        }
+
+        /* プログレス・区画ナビゲーション */
+        .progress-nav {
+            display: flex;
+            background: #0d1218;
+            border-bottom: 1px solid var(--panel-border);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .progress-nav::-webkit-scrollbar { display: none; }
+
+        .nav-step {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 6px;
+            text-align: center;
+            font-size: 0.75rem;
+            border-right: 1px solid var(--panel-border);
+            background: transparent;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-step:last-child { border-right: none; }
+
+        .nav-step.active {
+            background: rgba(229, 152, 25, 0.1);
+            color: var(--jurassic-amber);
+            font-weight: bold;
+            border-bottom: 3px solid var(--jurassic-amber);
+        }
+        .nav-step.cleared {
+            color: var(--jurassic-green);
+        }
+        .nav-step.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* メインコンテンツエリア */
+        .content-area {
+            padding: 24px 20px;
+        }
+
+        .sector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--panel-border);
+        }
+
+        .sector-title {
+            font-size: 1.1rem;
+            color: var(--jurassic-amber);
+            font-weight: bold;
+        }
+
+        .badge-status {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #1e293b;
+        }
+        .badge-investigating { color: var(--jurassic-amber); border: 1px solid var(--jurassic-amber); }
+        .badge-cleared { color: var(--jurassic-green); border: 1px solid var(--jurassic-green); }
+
+        /* 謎・問題ボックス */
+        .puzzle-box {
+            background: #090c10;
+            border: 1px solid #1a2330;
+            border-left: 4px solid var(--jurassic-amber);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+            line-height: 1.7;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+        }
+
+        /* 入力フォーム */
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .answer-input {
+            flex: 1;
+            background: #080b0e;
+            border: 1px solid #2a374a;
+            border-radius: 6px;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .answer-input:focus {
+            border-color: var(--jurassic-amber);
+            box-shadow: 0 0 8px rgba(229, 152, 25, 0.3);
+        }
+
+        .submit-btn {
+            background: var(--jurassic-amber);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            padding: 0 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .submit-btn:hover { background: #ffaa2b; }
+        .submit-btn:active { transform: scale(0.98); }
+
+        /* メッセージ表示 */
+        .alert-msg {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .alert-error {
+            background: rgba(255, 51, 75, 0.1);
+            border: 1px solid var(--jurassic-red);
+            color: var(--jurassic-red);
+        }
+
+        /* ヒント・解説 */
+        .hint-container {
+            margin-top: 16px;
+            border-top: 1px solid #1a2330;
+            padding-top: 16px;
+        }
+
+        details {
+            background: #090d12;
+            border: 1px solid #1a2330;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        summary {
+            padding: 10px 14px;
+            cursor: pointer;
+            color: var(--text-sub);
+            font-weight: bold;
+            user-select: none;
+        }
+        summary:hover { color: var(--jurassic-amber); }
+
+        .hint-content {
+            padding: 12px 14px;
+            border-top: 1px solid #1a2330;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        /* クリアモーダル演出 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .modal-box {
+            background: #111822;
+            border: 2px solid var(--jurassic-green);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 230, 118, 0.2);
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-title {
+            color: var(--jurassic-green);
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .modal-body {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+
+        .modal-btn {
+            background: var(--jurassic-green);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        /* フッターリセット */
+        .terminal-footer {
+            padding: 12px;
+            text-align: center;
+            border-top: 1px solid var(--panel-border);
+            font-size: 0.75rem;
+            color: var(--text-sub);
+        }
+        .reset-btn {
+            background: none;
+            border: none;
+            color: #475569;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.75rem;
+        }
+        .reset-btn:hover { color: var(--jurassic-red); }
+    </style>
 </head>
 <body>
-  <main class="app">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">QUIZ</p>
-        <h1>My Quiz</h1>
-        <p class="subtitle">自分で問題を追加できるシンプルなクイズサイト</p>
-      </div>
-      <button id="restartBtn" class="ghost">最初から</button>
-    </header>
 
-    <section class="progress-wrap">
-      <div class="progress-info">
-        <span id="progressText">1 / 1</span>
-        <span id="scoreText">正解 0</span>
-      </div>
-      <div class="progress"><div id="progressBar"></div></div>
-    </section>
-
-    <section id="quizCard" class="card">
-      <div class="question-number" id="questionNumber">Q1</div>
-      <h2 id="question"></h2>
-      <div id="choices" class="choices"></div>
-      <div id="hintArea" class="hint-area">
-        <button id="hintBtn" class="hint-btn">💡 ヒントを見る</button>
-        <p id="hint" class="hint hidden"></p>
-      </div>
-      <div id="explanation" class="explanation hidden"></div>
-      <button id="nextBtn" class="next hidden">次の問題 →</button>
-    </section>
-
-    <section id="resultCard" class="card result hidden">
-      <p class="eyebrow">RESULT</p>
-      <h2>クイズ終了！</h2>
-      <div class="result-score"><span id="finalScore">0</span> / <span id="finalTotal">0</span></div>
-      <p id="resultMessage"></p>
-      <button id="retryBtn" class="next">もう一度挑戦</button>
-    </section>
-  </main>
-  <script src="quiz.js"></script>
-</body>
-</html>
+<div class="terminal-container">
+    <!-- ヘッダー -->
+    <header class="terminal-header">
+        <span class="facility-badge">ISLA NUBLAR RESEARCH LAB</span>
+        <h1 class="terminal-title">🦖 JURASSIC WORLD</h1>
+        <div class="terminal-status-banner" id="statusBanner">
+            現在「第1区画」を調査中.
