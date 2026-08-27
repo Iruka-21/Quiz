@@ -17,16 +17,14 @@
 
 const CONFIG = {
   STORAGE_KEY: 'jw_quiz_expedition_state_v1',
-  ADMIN_PASSCODE: 'CHANGE_ME', // 🔑 管理者パスコード（必ず変更してください）
+  // ★★★ 編集エリア：管理者パスワードを変更する ★★★
+  ADMIN_PASSCODE: 'CHANGE_ME', // 🔑 ここを任意のパスワードに変更してください
   SECTOR_COUNT: 4,
 };
 
 /* --------------------------------------------------------------------------
    📋 SECTOR_POOLS — 区画ごとの指示書＆問題プール
-   ・instructions … 調査指示書（ストーリー・移動先）に表示するテキスト
-   ・patterns[]   … 出題パターン。チーム登録時にランダムで1つ選ばれ固定される
-   ・answers[]    … 正解として許容する表記のバリエーション（自由に追加可）
-   ・clueCode     … 正解時に手に入る「起動コード」の欠片（FINALで使用）
+   ★★★ 編集エリア：問題・指示書の編集は以下の SECTOR_POOLS 内で行います ★★★
    -------------------------------------------------------------------------- */
 const SECTOR_POOLS = [
   {
@@ -42,17 +40,24 @@ const SECTOR_POOLS = [
       '現地の展示パネルに残された足跡と記録を調査し、逃走した草食竜を特定してセキュリティコードを解読せよ。\n' +
       '解読したコードはこの端末のQUIZ入力欄へ送信すること。',
     patterns: [
+      // ========== パターンA ==========
       {
         patternName: 'A',
         title: '一区画：ジャングルエリア (Pattern A)',
+        // 問題文（編集可）
         question:
           'パドックの記録には「体長20m級。小さな頭部と長い首を持つ、竜脚類の中でも屈指の大きさを誇る草食竜」と記されている。\n' +
           'この恐竜の名前を英語（アルファベット）で入力せよ。',
+        // 正解バリエーション（編集可：複数追加可能）
         answers: ['BRACHIOSAURUS', 'ブラキオサウルス'],
+        // ヒント（編集可）
         hint: 'ヒント：首がとても長く、キリンのように高い木の葉を食べる巨大な竜脚類だ。',
+        // 解説（編集可）
         explanation: '正解は「ブラキオサウルス」。竜脚類の中でも特に首が長く、映画シリーズの象徴的存在として度々登場する草食恐竜だ。',
+        // 起動コードの欠片（編集可）
         clueCode: 'J7',
       },
+      // ========== パターンB ==========
       {
         patternName: 'B',
         title: '一区画：ジャングルエリア (Pattern B)',
@@ -78,6 +83,7 @@ const SECTOR_POOLS = [
       '次の調査エリアは 2階 図書室前 の「リバー・アドベンチャー」乗船口だ。\n' +
       '水位センサーが異常な水しぶきを検知している。ログに残された痕跡を調査し、氾濫の原因となった水棲の爬虫類を特定せよ。',
     patterns: [
+      // ========== パターンA ==========
       {
         patternName: 'A',
         title: '二区画：リバーエリア (Pattern A)',
@@ -89,6 +95,7 @@ const SECTOR_POOLS = [
         explanation: '正解は「スピノサウルス」。背中の棘状突起（帆）と細長い顎が特徴で、水辺を生活圏とする肉食恐竜だ。',
         clueCode: 'R9',
       },
+      // ========== パターンB ==========
       {
         patternName: 'B',
         title: '二区画：リバーエリア (Pattern B)',
@@ -114,6 +121,7 @@ const SECTOR_POOLS = [
       '巨大な鳥かご式ドーム「アビアリー」のゲートが開放状態になっている。3階 視聴覚室前 へ急行せよ。\n' +
       'ドーム内に残された鳴き声データを解析し、逃走した翼竜を突き止めよ。',
     patterns: [
+      // ========== パターンA ==========
       {
         patternName: 'A',
         title: '三区画：アビアリーエリア (Pattern A)',
@@ -125,6 +133,7 @@ const SECTOR_POOLS = [
         explanation: '正解は「プテラノドン」。歯のないクチバシと後頭部の大きなトサカが特徴的な、代表的な翼竜だ。',
         clueCode: 'A2',
       },
+      // ========== パターンB ==========
       {
         patternName: 'B',
         title: '三区画：アビアリーエリア (Pattern B)',
@@ -150,6 +159,7 @@ const SECTOR_POOLS = [
       '最終調査区画は 特別棟1階 理科室 の「創世研究ラボ」だ。\n' +
       '遺伝子シーケンサーに残されたロック画面のクイズに正解し、最終起動コードの最後の欠片を入手せよ。',
     patterns: [
+      // ========== パターンA ==========
       {
         patternName: 'A',
         title: '四区画：ラボエリア (Pattern A)',
@@ -161,6 +171,7 @@ const SECTOR_POOLS = [
         explanation: '正解は「蚊」。琥珀に閉じ込められた古代の蚊の体内に残る血液から、恐竜のDNAが採取されたという設定だ。',
         clueCode: 'L5',
       },
+      // ========== パターンB ==========
       {
         patternName: 'B',
         title: '四区画：ラボエリア (Pattern B)',
@@ -176,7 +187,7 @@ const SECTOR_POOLS = [
   },
 ];
 
-/* FINAL区画（コード組立チャレンジ） */
+/* ★★★ 編集エリア：FINAL区画の指示書を編集する場合 ★★★ */
 const FINAL_SECTOR = {
   id: 'final',
   name: 'FINAL',
@@ -209,7 +220,6 @@ function createDefaultState() {
 }
 
 let state = createDefaultState();
-/** 現在ダッシュボードで表示中の区画インデックス（0-3 通常区画 / 4 = FINAL） メモリ上のみ保持 */
 let viewIndex = 0;
 
 function loadState() {
@@ -218,7 +228,6 @@ function loadState() {
     if (!raw) return createDefaultState();
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return createDefaultState();
-    // 欠損フィールドを補完
     const def = createDefaultState();
     return Object.assign(def, parsed);
   } catch (e) {
@@ -245,21 +254,13 @@ function clearState() {
 
 /* ============================ 3. 入力正規化 ============================ */
 
-/**
- * 全角/半角、大文字/小文字、前後・内部の空白差を吸収して比較用に正規化する
- */
 function normalizeAnswer(input) {
   if (input == null) return '';
   let s = String(input);
-  // 全角英数記号 -> 半角
   s = s.replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
-  // 全角スペース -> 半角スペース
   s = s.replace(/\u3000/g, ' ');
-  // 前後空白除去
   s = s.trim();
-  // 内部の空白・中点・ハイフンなど区切り文字を除去（表記ゆらぎ吸収）
   s = s.replace(/[\s・\-_/]/g, '');
-  // 大文字/小文字統一
   s = s.toLowerCase();
   return s;
 }
@@ -272,8 +273,8 @@ function isCorrectAnswer(pattern, rawInput) {
 
 /* ============================ 4. セキュリティ ============================ */
 
-let securityArmed = false;      // 監視有効フラグ
-let adminActionInProgress = false; // 管理者操作中は監視を一時的に無視
+let securityArmed = false;
+let adminActionInProgress = false;
 
 function enterFullscreenSafe() {
   try {
@@ -314,7 +315,7 @@ function disarmSecurity() {
 function triggerViolation(reason) {
   if (!securityArmed) return;
   if (adminActionInProgress) return;
-  if (state.locked) return; // 既にロック中なら重複発火させない
+  if (state.locked) return;
   state.locked = true;
   state.lockReason = reason || '不審な操作を検知しました';
   saveState();
@@ -322,15 +323,12 @@ function triggerViolation(reason) {
 }
 
 function attachSecurityListeners() {
-  // タブ切り替え・アプリ切り替え検知（Page Visibility API）
-  // ※ ソフトウェアキーボードの開閉やアドレスバー操作は document.hidden を変化させないため誤爆しない
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       triggerViolation('別のタブ／アプリへの切り替えを検知しました (SECURITY VIOLATION)');
     }
   });
 
-  // フルスクリーン解除検知
   const fsHandler = () => {
     const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
     if (!fsEl) {
@@ -341,14 +339,10 @@ function attachSecurityListeners() {
   document.addEventListener('webkitfullscreenchange', fsHandler);
   document.addEventListener('MSFullscreenChange', fsHandler);
 
-  // 右クリック禁止
   document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-  // コピー禁止
   document.addEventListener('copy', (e) => e.preventDefault());
   document.addEventListener('cut', (e) => e.preventDefault());
 
-  // 開発者ツール・ソース表示等のショートカット禁止
   document.addEventListener('keydown', (e) => {
     const k = (e.key || '').toUpperCase();
     const blocked =
@@ -405,7 +399,6 @@ function adminUnlock() {
   saveState();
   hideLockScreen();
   closeAdminModal();
-  // 再度フルスクリーンへの復帰を試みる（ユーザー操作起点なので許可されやすい）
   enterFullscreenSafe();
   setTimeout(() => { adminActionInProgress = false; }, 800);
 }
@@ -443,7 +436,7 @@ function hideLockScreen() {
 }
 
 function maxViewIndex() {
-  if (state.clearedSectors >= CONFIG.SECTOR_COUNT) return 4; // FINAL閲覧可
+  if (state.clearedSectors >= CONFIG.SECTOR_COUNT) return 4;
   return Math.min(state.clearedSectors, CONFIG.SECTOR_COUNT - 1);
 }
 
@@ -526,7 +519,6 @@ function renderSectorCards() {
     container.appendChild(card);
   });
 
-  // FINALカード
   const finalSt = state.finalCleared ? 'cleared' : state.clearedSectors >= CONFIG.SECTOR_COUNT ? 'active' : 'locked';
   const finalCard = document.createElement('button');
   finalCard.type = 'button';
@@ -770,13 +762,11 @@ function handleStartTeam() {
   showScreen('dashboard');
   renderAll();
 
-  // フルスクリーン化（ユーザー操作起点なので許可されやすい）
   enterFullscreenSafe();
-  // セキュリティ監視を開始（フルスクリーンが拒否されても開始されるが、READMEで説明済み）
   armSecurity();
 }
 
-/* -------- 再開オーバーレイ（リロード復帰時） -------- */
+/* -------- 再開オーバーレイ -------- */
 
 function showResumeOverlay() {
   document.getElementById('resume-overlay').classList.add('active');
@@ -788,19 +778,16 @@ function hideResumeOverlay() {
 /* ============================ 7. 初期化 / イベントバインド ============================ */
 
 function bindEvents() {
-  // 登録画面
   document.getElementById('btn-start-team').addEventListener('click', handleStartTeam);
   document.getElementById('team-name-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleStartTeam();
   });
 
-  // トップバー
   document.getElementById('btn-howto').addEventListener('click', () => openModal('modal-howto'));
   document.getElementById('btn-notice').addEventListener('click', () => openModal('modal-notice'));
   document.getElementById('btn-howto-close').addEventListener('click', () => closeModal('modal-howto'));
   document.getElementById('btn-notice-close').addEventListener('click', () => closeModal('modal-notice'));
 
-  // アクションバー
   document.getElementById('btn-prev').addEventListener('click', () => {
     if (viewIndex > 0) {
       viewIndex -= 1;
@@ -815,7 +802,6 @@ function bindEvents() {
   });
   document.getElementById('btn-quiz').addEventListener('click', openQuizModal);
 
-  // クイズモーダル
   document.getElementById('btn-quiz-submit').addEventListener('click', submitQuizAnswer);
   document.getElementById('quiz-answer-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') submitQuizAnswer();
@@ -826,14 +812,12 @@ function bindEvents() {
   document.getElementById('btn-quiz-close').addEventListener('click', closeQuizModal);
   document.getElementById('btn-quiz-close-review').addEventListener('click', closeQuizModal);
 
-  // FINALモーダル
   document.getElementById('btn-final-submit').addEventListener('click', submitFinalAnswer);
   document.getElementById('final-answer-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') submitFinalAnswer();
   });
   document.getElementById('btn-final-close').addEventListener('click', closeFinalModal);
 
-  // ADMIN
   document.getElementById('btn-admin-fixed').addEventListener('click', openAdminModal);
   document.getElementById('btn-admin-close').addEventListener('click', closeAdminModal);
   document.getElementById('btn-admin-auth-submit').addEventListener('click', submitAdminPasscode);
@@ -843,14 +827,12 @@ function bindEvents() {
   document.getElementById('btn-admin-unlock').addEventListener('click', adminUnlock);
   document.getElementById('btn-admin-reset').addEventListener('click', adminResetDevice);
 
-  // 再開オーバーレイ
   document.getElementById('btn-resume').addEventListener('click', () => {
     enterFullscreenSafe();
     armSecurity();
     hideResumeOverlay();
   });
 
-  // モーダル背景クリックで閉じる（ADMIN・ロック画面は除く誤操作防止のため対象外）
   document.querySelectorAll('.modal-overlay[data-dismissible="true"]').forEach((overlay) => {
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.classList.remove('active');
@@ -865,11 +847,9 @@ function init() {
   state = loadState();
 
   if (state.teamName && state.completedAt) {
-    // 完了済み：復帰
     showScreen('complete');
     renderCompleteScreen();
   } else if (state.teamName) {
-    // 進行中：復帰
     viewIndex = maxViewIndex();
     showScreen('dashboard');
     renderAll();
@@ -880,7 +860,6 @@ function init() {
       showResumeOverlay();
     }
   } else {
-    // 未登録：登録画面
     showScreen('registration');
   }
 }
