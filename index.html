@@ -81,7 +81,7 @@
 </section>
 
 <!-- ============================================================
-     🎉 完了画面（スコア・QR 2種・ダウンロード）
+     🎉 完了画面（日付・ゲーム名・supported by 表示）
      ============================================================ -->
 <section id="screen-complete" class="screen">
   <div class="complete-card">
@@ -89,20 +89,26 @@
     <h1 class="complete-title">MISSION COMPLETE</h1>
     <p class="complete-team">TEAM: <b id="complete-team-name">---</b></p>
     
-    <!-- スコア（ポイント）表示 -->
+    <!-- ゲーム名と日付 -->
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--c-text-dim);margin-bottom:8px;padding:0 4px;">
+      <span id="complete-game-name">ISLA NUBLAR RESEARCH LAB</span>
+      <span id="complete-date">----</span>
+    </div>
+
+    <!-- スコア表示 -->
     <div style="background:rgba(43,240,120,0.1);border:2px solid var(--c-green);border-radius:12px;padding:12px;margin:12px 0;">
       <span style="font-size:14px;color:var(--c-text-dim);">🏅 スコア</span>
       <div style="font-family:var(--font-display);font-size:36px;color:var(--c-amber);text-shadow:0 0 20px rgba(245,158,11,0.5);" id="complete-score">-- pt</div>
       <div style="font-size:13px;color:var(--c-text-dim);">所要時間: <span id="complete-duration">0分00秒</span></div>
     </div>
 
-    <p class="complete-sub">施設のロックダウンは解除された。エヴァキュエーション・エリアへ移動せよ。</p>
+    <p class="complete-sub" id="complete-sub">施設のロックダウンは解除された。エヴァキュエーション・エリアへ移動せよ。</p>
     <div class="complete-stats">
       <div class="complete-stat"><span class="stat-label">起動コード</span><span class="stat-value stat-code" id="complete-code">----</span></div>
     </div>
     <ul class="complete-clue-list" id="complete-clue-list"></ul>
     
-    <!-- ★★★ 2つのQRコード（ページURL / コラムURL） ★★★ -->
+    <!-- QRコード（2種） -->
     <div style="margin:16px 0;padding:12px;background:rgba(56,189,248,0.06);border:1px dashed var(--c-cyan);border-radius:8px;">
       <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:20px;">
         <div style="text-align:center;">
@@ -120,12 +126,15 @@
     <button id="btn-download-result" class="btn-primary" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#f59e0b,#fcd34d);color:#1a1a1a;box-shadow:0 0 20px rgba(245,158,11,0.4);">
       <i class="fa-solid fa-download"></i> 結果を画像で保存（QRコード付き）
     </button>
-    <p class="complete-note" style="margin-top:12px;">スタッフに本画面を提示するか、画像をダウンロードして提出してください。</p>
+
+    <!-- supported by 表示 -->
+    <p class="complete-note" id="complete-supported-by" style="margin-top:12px;font-size:13px;color:var(--c-text-dim);"></p>
+    <p class="complete-note" style="margin-top:4px;">スタッフに本画面を提示するか、画像をダウンロードして提出してください。</p>
   </div>
 </section>
 
 <!-- ============================================================
-     🚨 緊急ロック画面 / 再開オーバーレイ / モーダル
+     🚨 緊急ロック画面
      ============================================================ -->
 <section id="lock-screen" class="lock-screen">
   <div class="lock-strobe"></div>
@@ -137,6 +146,9 @@
   </div>
 </section>
 
+<!-- ============================================================
+     🔁 リロード復帰オーバーレイ
+     ============================================================ -->
 <div id="resume-overlay" class="resume-overlay">
   <div class="resume-box">
     <div class="resume-icon">🔄</div>
@@ -146,7 +158,9 @@
   </div>
 </div>
 
-<!-- モーダル：コンセプト / 遊び方 / 注意 -->
+<!-- ============================================================
+     モーダル：コンセプト / 遊び方 / 注意
+     ============================================================ -->
 <div id="modal-concept" class="modal-overlay" data-dismissible="true">
   <div class="modal-box modal-box-lg">
     <div class="modal-header"><span><i class="fa-solid fa-book-open"></i> ストーリーコンセプト</span><button id="btn-concept-close" class="btn-modal-close">&times;</button></div>
@@ -168,7 +182,9 @@
   </div>
 </div>
 
-<!-- クイズ / FINAL モーダル -->
+<!-- ============================================================
+     モーダル：クイズ / FINAL
+     ============================================================ -->
 <div id="modal-quiz" class="modal-overlay">
   <div class="modal-box modal-box-lg quiz-modal-box">
     <div class="modal-header"><span id="quiz-modal-title"><i class="fa-solid fa-flask"></i> QUIZ</span><button id="btn-quiz-close" class="btn-modal-close">&times;</button></div>
@@ -200,7 +216,9 @@
   </div>
 </div>
 
-<!-- ADMIN -->
+<!-- ============================================================
+     ⚙️ ADMIN
+     ============================================================ -->
 <button id="btn-admin-fixed" class="btn-admin-fixed" aria-label="管理者メニュー">⚙️ ADMIN</button>
 <div id="modal-admin" class="modal-overlay">
   <div class="modal-box admin-modal-box">
