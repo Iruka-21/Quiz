@@ -1,584 +1,545 @@
-:root {
-    --bg-dark: #04080b;
-    --panel-bg: rgba(7, 16, 22, 0.88);
-    --panel-border: #14322d;
-    --jw-green: #2bf078;
-    --jw-green-glow: rgba(43, 240, 120, 0.4);
-    --jw-amber: #f59e0b;
-    --jw-red: #ef4444;
-    --jw-cyan: #38bdf8;
-    --text-main: #f1f5f9;
-    --text-sub: #94a3b8;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-main);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-image: 
-        radial-gradient(ellipse at 50% 10%, rgba(43, 240, 120, 0.08), transparent 70%),
-        linear-gradient(rgba(4, 8, 11, 0.75), rgba(4, 8, 11, 0.85)),
-        url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80');
-    background-size: cover;
-    background-position: center;
-    padding: 12px;
-    position: relative;
-}
-
-/* ⚙️ 画面右下に常時固定される管理者ボタン */
-.floating-admin-btn {
-    position: fixed;
-    bottom: 12px;
-    right: 12px;
-    z-index: 999999;
-    background: rgba(10, 20, 26, 0.9);
-    border: 1px solid #1e3a47;
-    color: #64748b;
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-}
-.floating-admin-btn:hover {
-    color: var(--jw-amber);
-    border-color: var(--jw-amber);
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-}
-
-.expedition-app {
-    width: 100%;
-    max-width: 1080px;
-    background: var(--panel-bg);
-    border: 1.5px solid var(--panel-border);
-    border-radius: 18px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 30px rgba(43, 240, 120, 0.12);
-    backdrop-filter: blur(16px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-.highlight-green {
-    color: var(--jw-green) !important;
-    text-shadow: 0 0 10px var(--jw-green-glow);
-}
-
-/* 最上部バー */
-.top-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 24px;
-    background: rgba(3, 7, 10, 0.9);
-    border-bottom: 1px solid var(--panel-border);
-}
-
-.top-nav-team {
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: var(--jw-amber);
-    letter-spacing: 1.5px;
-}
-
-.top-nav-links {
-    display: flex;
-    gap: 16px;
-}
-
-.top-btn {
-    background: none;
-    border: none;
-    color: var(--text-sub);
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-.top-btn:hover { color: var(--jw-green); }
-
-/* メインダッシュボードグリッド */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1.4fr 0.8fr;
-    gap: 20px;
-    padding: 24px;
-}
-
-/* 左側：ロゴ & ミッション・指示書 */
-.dash-left {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.logo-area {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.jw-badge {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.jw-logo-icon {
-    font-size: 2.4rem;
-    filter: drop-shadow(0 0 8px var(--jw-green));
-}
-
-.jw-logo-main {
-    font-size: 1.5rem;
-    font-weight: 900;
-    letter-spacing: 3px;
-    color: #fff;
-}
-
-.jw-logo-sub {
-    font-size: 0.75rem;
-    letter-spacing: 4px;
-    color: #94a3b8;
-    font-weight: bold;
-}
-
-.jw-tagline {
-    color: #cbd5e1;
-    font-size: 0.85rem;
-    line-height: 1.5;
-}
-
-/* 📋 指示書パネル */
-.mission-panel {
-    background: rgba(4, 14, 18, 0.75);
-    border: 1px solid #1c4b40;
-    border-left: 4px solid var(--jw-green);
-    border-radius: 8px;
-    padding: 16px 20px;
-    position: relative;
-}
-
-.panel-tag {
-    font-size: 0.75rem;
-    color: var(--jw-green);
-    letter-spacing: 1.5px;
-    margin-bottom: 6px;
-    font-weight: bold;
-}
-
-.mission-heading {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.footprint-icon { font-size: 1.2rem; filter: drop-shadow(0 0 6px var(--jw-green)); }
-
-.mission-instructions {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px dashed rgba(43, 240, 120, 0.3);
-    border-radius: 6px;
-    padding: 12px 14px;
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: #e2e8f0;
-    white-space: pre-wrap;
-}
-
-/* 右側：STATUS & レーダー */
-.dash-right {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.status-box {
-    background: rgba(4, 14, 18, 0.75);
-    border: 1px solid #1c4b40;
-    border-radius: 8px;
-    padding: 16px;
-    position: relative;
-}
-
-.status-title {
-    font-size: 0.85rem;
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: var(--jw-green);
-    margin-bottom: 12px;
-}
-
-.status-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    font-size: 0.85rem;
-}
-
-.status-label { color: #94a3b8; font-weight: bold; }
-.status-val { font-size: 1.2rem; font-weight: 900; }
-
-/* レーダーアニメーション */
-.radar-container {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    border: 1px solid #1c4b40;
-    margin: 12px auto 0;
-    position: relative;
-    overflow: hidden;
-    background: radial-gradient(circle, rgba(43,240,120,0.05) 0%, rgba(4,14,18,0.9) 80%);
-}
-
-.radar-circle {
-    position: absolute;
-    top: 10px; left: 10px; right: 10px; bottom: 10px;
-    border: 1px dashed rgba(43,240,120,0.25);
-    border-radius: 50%;
-}
-.radar-circle.inner {
-    top: 25px; left: 25px; right: 25px; bottom: 25px;
-}
-
-.radar-cross-h, .radar-cross-v {
-    position: absolute;
-    background: rgba(43,240,120,0.2);
-}
-.radar-cross-h { top: 50%; left: 0; right: 0; height: 1px; }
-.radar-cross-v { left: 50%; top: 0; bottom: 0; width: 1px; }
-
-.radar-sweep {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: conic-gradient(from 0deg, transparent 70%, rgba(43,240,120,0.4) 100%);
-    border-radius: 50%;
-    animation: radarSpin 3s linear infinite;
-}
-
-@keyframes radarSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-.radar-blip {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: var(--jw-green);
-    border-radius: 50%;
-    top: 35px;
-    right: 28px;
-    box-shadow: 0 0 8px var(--jw-green);
-    animation: blip 2s infinite;
-}
-@keyframes blip {
-    0%, 100% { opacity: 0.2; }
-    50% { opacity: 1; transform: scale(1.3); }
-}
-
-.caution-box {
-    background: rgba(18, 8, 10, 0.7);
-    border: 1px solid #4a1d24;
-    border-radius: 8px;
-    padding: 10px 14px;
-}
-.caution-tag { font-size: 0.75rem; font-weight: bold; color: var(--jw-red); letter-spacing: 2px; }
-.caution-text { font-size: 0.8rem; color: #cbd5e1; margin-top: 4px; }
-
-/* 下部：区画カード一覧 */
-.sectors-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    padding: 0 24px 16px;
-}
-
-.sector-card {
-    background: rgba(6, 14, 19, 0.85);
-    border: 1px solid #14322d;
-    border-radius: 10px;
-    padding: 12px 8px;
-    text-align: center;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-
-.sector-card.active {
-    border-color: var(--jw-green);
-    background: rgba(43, 240, 120, 0.08);
-    box-shadow: 0 0 16px var(--jw-green-glow);
-}
-
-.sector-card.cleared {
-    border-color: var(--jw-cyan);
-}
-
-.sector-card.locked {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.card-title { font-size: 0.95rem; font-weight: 900; color: #fff; }
-.card-subtitle { font-size: 0.65rem; letter-spacing: 1.5px; color: #64748b; font-weight: bold; }
-.card-icon { font-size: 1.6rem; margin: 2px 0; }
-
-/* 最下部アクションバー（進行ボタン群） */
-.bottom-action-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 24px 18px;
-    background: rgba(3, 7, 10, 0.9);
-    border-top: 1px solid var(--panel-border);
-    gap: 12px;
-}
-
-.btn-step-nav {
-    background: #09131a;
-    border: 1px solid #1c3b47;
-    color: #94a3b8;
-    padding: 12px 20px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.btn-step-nav:hover:not(:disabled) {
-    color: var(--jw-green);
-    border-color: var(--jw-green);
-}
-.btn-step-nav:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.btn-main-action {
-    flex: 1;
-    max-width: 440px;
-    background: linear-gradient(180deg, #184637 0%, #0c2b22 100%);
-    border: 1.5px solid var(--jw-green);
-    color: var(--jw-green);
-    font-size: 1.2rem;
-    font-weight: 900;
-    letter-spacing: 2px;
-    padding: 14px 24px;
-    border-radius: 30px;
-    cursor: pointer;
-    box-shadow: 0 0 20px var(--jw-green-glow);
-    transition: all 0.2s;
-    text-align: center;
-}
-.btn-main-action:hover {
-    background: var(--jw-green);
-    color: #000;
-    box-shadow: 0 0 30px var(--jw-green);
-}
-.btn-main-action:active { transform: scale(0.97); }
+/* ==========================================================
+   🔑 管理者パスコード
+========================================================== */
+const ADMIN_PASSWORD = "admin";
 
 /* ==========================================================
-   モーダル共通スタイル
+   🟩 問題プール & パート別指示書エリア 🟩
+   各区画の「instructions」に指示書・移動先・ストーリーを記入してください。
+   「patterns」にはクイズの複数パターンを設定できます。
 ========================================================== */
-.modal-layer {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(3, 7, 10, 0.92);
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    z-index: 100000;
+const SECTOR_POOLS = [
+    {
+        id: 0,
+        name: "一区画",
+        shortName: "一区画",
+        areaName: "JUNGLE AREA",
+        icon: "🦖",
+        // 📋 パート1の指示書スペース（自由に書き換えてください）
+        instructions: "【一区画 調査指示書】\n1階 101教室前のジャングルパドックへ向かえ。\n現地の展示パネルを調査し、隠されたセキュリティコードを解読せよ。",
+        patterns: [
+            {
+                patternName: "A",
+                title: "一区画：ジャングルエリア (JUNGLE AREA A)",
+                question: "【調査ミッション 01-A】\nジャングルの看板右下の影が指し示す4文字の英単語を入力せよ。",
+                answers: ["BRAK", "ブラキオ"],
+                hint: "矢印の先にあるアルファベットを順に読んでみよう。",
+                explanation: "正解は「BRAK」！草食恐竜の手がかりを回収しました。"
+            },
+            {
+                patternName: "B",
+                title: "一区画：ジャングルエリア (JUNGLE AREA B)",
+                question: "【調査ミッション 01-B】\n3本の角を持つ恐竜の足元にある暗号を解読せよ。\n『3本のツノが指すアルファベット4文字は？』",
+                answers: ["TRIC", "トリケラ"],
+                hint: "頭骨プレートのツノの方向を確認しよう。",
+                explanation: "正解は「TRIC」！草食恐竜の手がかりを回収しました。"
+            }
+        ]
+    },
+    {
+        id: 1,
+        name: "二区画",
+        shortName: "二区画",
+        areaName: "RIVER AREA",
+        icon: "🦕",
+        // 📋 パート2の指示書スペース（自由に書き換えてください）
+        instructions: "【二区画 調査指示書】\n2階 生徒会室前のリバーエリアへ向かえ。\n川沿いの監視カメラコードを特定し、水門ゲートを開放せよ。",
+        patterns: [
+            {
+                patternName: "A",
+                title: "二区画：リバーエリア (RIVER AREA A)",
+                question: "【調査ミッション 02-A】\n川沿いの監視カメラコードを特定せよ。\n『琥珀のDNA配列から欠落している恐竜のコードネームは？』",
+                answers: ["RAPTOR", "ラプター"],
+                hint: "ポッド側面の「A-T-G-C」変換表をチェック！",
+                explanation: "正解は「RAPTOR」！水辺の肉食恐竜フェンスコードを取得。"
+            },
+            {
+                patternName: "B",
+                title: "二区画：リバーエリア (RIVER AREA B)",
+                question: "【調査ミッション 02-B】\nボート乗り場の緊急キーを割り出せ。\n『水門レバーに刻まれた頭文字3文字を入力せよ』",
+                answers: ["IND", "インドラ"],
+                hint: "危険警告モニターの最上段の文字を読もう。",
+                explanation: "正解は「IND」！リバーゲートの開放に成功しました。"
+            }
+        ]
+    },
+    {
+        id: 2,
+        name: "三区画",
+        shortName: "三区画",
+        areaName: "AVIARY AREA",
+        icon: "🦅",
+        // 📋 パート3の指示書スペース（自由に書き換えてください）
+        instructions: "【三区画 調査指示書】\n2階 渡り廊下の翼竜観測ドームへ向かえ。\n頭上を旋回する翼竜の監視データを解析し、航空システムを復旧せよ。",
+        patterns: [
+            {
+                patternName: "A",
+                title: "三区画：翼竜観測ドーム (AVIARY AREA A)",
+                question: "【調査ミッション 03-A】\n上空を旋回する翼竜の監視カメラデータを解析せよ。\n『監視カメラNo.12、No.25、No.40の数字の合計を入力せよ』",
+                answers: ["77"],
+                hint: "掲示された3枚の写真の番号を足し算してみよう。",
+                explanation: "正解は「77」！ドーム天井シャッターの制御を取得。"
+            },
+            {
+                patternName: "B",
+                title: "三区画：翼竜観測ドーム (AVIARY AREA B)",
+                question: "【調査ミッション 03-B】\nドーム内の風速センサーから高度コードを特定せよ。\n『翼の幅を表す数字（5m × 16）の計算結果を入力せよ』",
+                answers: ["80"],
+                hint: "風速計の横に書かれた計算式を解いてみよう。",
+                explanation: "正解は「80」！航空監視システムが正常復旧しました。"
+            }
+        ]
+    },
+    {
+        id: 3,
+        name: "四区画",
+        shortName: "四区画",
+        areaName: "LAB AREA",
+        icon: "🔬",
+        // 📋 パート4の指示書スペース（自由に書き換えてください）
+        instructions: "【四区画 調査指示書】\n3階 体育館前特設エリアの研究ラボへ向かえ。\nT-REXの給餌システムを緊急停止させ、メインフェンスの電力を復旧せよ。",
+        patterns: [
+            {
+                patternName: "A",
+                title: "四区画：研究ラボ (LAB AREA A)",
+                question: "【調査ミッション 04-A】\n肉食恐竜エリアの高圧電流フェンスを再起動せよ。\n『足跡の化石に刻まれたアルファベット3文字を入力せよ』",
+                answers: ["REX", "レックス"],
+                hint: "地面の足跡プレートをかかとから爪先へ読もう。",
+                explanation: "正解は「REX」！メインフェンスの電力が安全に復旧しました。"
+            },
+            {
+                patternName: "B",
+                title: "四区画：研究ラボ (LAB AREA B)",
+                question: "【調査ミッション 04-B】\nT-REX給餌クレーンを緊急停止せよ。\n『非常レバーの横に刻まれた警告コードを入力せよ』",
+                answers: ["KING", "キング"],
+                hint: "黄色と黒のトラ柄ロープの先にある文字を確認しよう。",
+                explanation: "正解は「KING」！クレーンの非常停止に成功しました。"
+            }
+        ]
+    },
+    {
+        id: 4,
+        name: "FINAL",
+        shortName: "FINAL",
+        areaName: "CONTROL TOWER",
+        icon: "🚨",
+        // 📋 FINALの指示書スペース（自由に書き換えてください）
+        instructions: "【最終ミッション 指示書】\n1階 本部受付の中央制御タワーへ向かえ。\nこれまで集めた4つのキーワードの頭文字を並べ、メインシステムを再起動せよ！",
+        patterns: [
+            {
+                patternName: "A",
+                title: "最終区画：中央制御タワー (CONTROL TOWER)",
+                question: "【最終ミッション】\nパーク全体の制御システムを完全再起動せよ！\n\n『一〜四区画で手に入れた答えの【頭文字】を順番に並べて入力せよ！』",
+                answers: ["BR7R", "BR8R", "TR7K", "TR8K", "BIRT", "TIRT"],
+                hint: "クリアした各区画のレポートを見返してみよう。",
+                explanation: "全システム再起動成功！パークの全恐竜の隔離が完了し、完全脱出ルートが開かれました！"
+            }
+        ]
+    }
+];
+
+/* ==========================================================
+   システム状態管理
+========================================================== */
+let teamName = localStorage.getItem("jw_team_name") || "";
+let clearedList = JSON.parse(localStorage.getItem("jw_cleared_list") || "[]");
+let currentSectorId = parseInt(localStorage.getItem("jw_current_id") || "0");
+let assignedPatterns = JSON.parse(localStorage.getItem("jw_assigned_patterns") || "{}");
+let isViolationLocked = localStorage.getItem("jw_violation_locked") === "true";
+let isGameActive = false;
+
+document.addEventListener("DOMContentLoaded", () => {
+    bindAntiCheat();
+
+    if (isViolationLocked) {
+        triggerViolation();
+        return;
+    }
+
+    if (!teamName) {
+        showTeamSetupModal();
+    } else {
+        isGameActive = true;
+        initDashboard();
+    }
+});
+
+/* ==========================================================
+   不正防止ロジック
+========================================================== */
+function bindAntiCheat() {
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden && isGameActive && !isViolationLocked) {
+            triggerViolation();
+        }
+    });
+
+    document.addEventListener("contextmenu", e => e.preventDefault());
+    document.addEventListener("copy", e => e.preventDefault());
+    document.addEventListener("cut", e => e.preventDefault());
 }
 
-.modal-card {
-    background: #09131a;
-    border: 2px solid var(--jw-green);
-    border-radius: 16px;
-    padding: 28px 24px;
-    max-width: 560px;
-    width: 100%;
-    box-shadow: 0 0 40px var(--jw-green-glow);
+function triggerViolation() {
+    isViolationLocked = true;
+    localStorage.setItem("jw_violation_locked", "true");
+    const lockScreen = document.getElementById("securityLockScreen");
+    if (lockScreen) lockScreen.style.setProperty("display", "flex", "important");
 }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    border-bottom: 1px solid #14322d;
-    padding-bottom: 10px;
+function enterFullscreen() {
+    const el = document.documentElement;
+    try {
+        if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    } catch (e) {}
 }
 
-.modal-title { font-size: 1.3rem; font-weight: 900; }
-.btn-close-modal { background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer; }
-
-.puzzle-box {
-    background: #04090d;
-    border: 1px solid #14322d;
-    border-left: 4px solid var(--jw-green);
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    font-size: 1rem;
-    line-height: 1.8;
-    white-space: pre-wrap;
-    color: #e2e8f0;
+function exitFullscreen() {
+    try {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    } catch (e) {}
 }
 
-.input-row { display: flex; gap: 10px; }
-.code-input {
-    flex: 1;
-    background: #04090d;
-    border: 2px solid #1e3a47;
-    border-radius: 8px;
-    padding: 14px;
-    font-size: 1.1rem;
-    color: #fff;
-    outline: none;
-    user-select: text !important;
-    -webkit-user-select: text !important;
-}
-.code-input:focus {
-    border-color: var(--jw-green);
-    box-shadow: 0 0 12px var(--jw-green-glow);
+function normalizeText(str) {
+    return str
+        .trim()
+        .toLowerCase()
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+        .replace(/\s+/g, "");
 }
 
-.btn-submit {
-    background: var(--jw-green);
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    padding: 0 24px;
-    font-weight: 900;
-    font-size: 1rem;
-    cursor: pointer;
+/* ==========================================================
+   チーム登録
+========================================================== */
+function showTeamSetupModal() {
+    isGameActive = false;
+    const modal = document.getElementById("teamSetupModal");
+    modal.style.setProperty("display", "flex", "important");
+    document.getElementById("teamSetupInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") startInvestigation();
+    });
 }
 
-.error-alert {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid var(--jw-red);
-    color: #fca5a5;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    margin-top: 10px;
-    font-weight: bold;
+function startInvestigation() {
+    const input = document.getElementById("teamSetupInput");
+    if (!input || !input.value.trim()) {
+        alert("チーム名を入力してください！");
+        return;
+    }
+    teamName = input.value.trim();
+    localStorage.setItem("jw_team_name", teamName);
+
+    assignedPatterns = {};
+    SECTOR_POOLS.forEach(sec => {
+        assignedPatterns[sec.id] = Math.floor(Math.random() * sec.patterns.length);
+    });
+    localStorage.setItem("jw_assigned_patterns", JSON.stringify(assignedPatterns));
+
+    document.getElementById("teamSetupModal").style.setProperty("display", "none", "important");
+    isGameActive = true;
+    enterFullscreen();
+    initDashboard();
 }
 
-.accordion-box { margin-top: 16px; }
-details {
-    background: #04090d;
-    border: 1px solid #14322d;
-    border-radius: 6px;
-    margin-bottom: 8px;
-}
-summary {
-    padding: 12px 14px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: #94a3b8;
-    cursor: pointer;
-}
-.accordion-body {
-    padding: 12px 14px;
-    border-top: 1px solid #14322d;
-    font-size: 0.85rem;
-    line-height: 1.7;
-    color: #cbd5e1;
+/* ==========================================================
+   ダッシュボード描画 & ボタン進行制御
+========================================================== */
+function getCurrentQuestion(sectorId) {
+    const sec = SECTOR_POOLS[sectorId];
+    const patternIdx = assignedPatterns[sectorId] || 0;
+    return {
+        ...sec,
+        ...sec.patterns[patternIdx]
+    };
 }
 
-.admin-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-.admin-actions .btn-cancel { grid-column: span 2; background: #1e293b; color: #cbd5e1; }
-.btn-action {
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    font-weight: bold;
-    font-size: 0.9rem;
-    cursor: pointer;
-}
-.btn-resume-game { background: var(--jw-green); color: #000; }
-.btn-reset-game { background: var(--jw-red); color: #fff; }
+function initDashboard() {
+    document.getElementById("topTeamName").innerText = `TEAM: ${teamName}`;
+    
+    const maxUnlocked = clearedList.length;
+    if (currentSectorId > maxUnlocked) {
+        currentSectorId = maxUnlocked;
+    }
 
-/* 🚨 緊急ロック画面 */
-.security-lock-screen {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(3, 5, 8, 0.98);
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    z-index: 99999;
-}
-.security-card {
-    background: #15090d;
-    border: 2px solid var(--jw-red);
-    border-radius: 20px;
-    padding: 36px 24px;
-    text-align: center;
-    max-width: 520px;
-    width: 100%;
-    box-shadow: 0 0 60px rgba(239, 68, 68, 0.5);
-}
-.alarm-icon { font-size: 3.5rem; margin-bottom: 8px; }
-.alarm-title { font-size: 1.4rem; color: var(--jw-red); letter-spacing: 2px; font-weight: 900; }
-.alarm-subtitle { font-size: 1.1rem; color: #fff; margin-bottom: 16px; font-weight: bold; }
-.alarm-text { color: #cbd5e1; font-size: 0.95rem; line-height: 1.7; margin-bottom: 20px; }
-.alarm-guide {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px dashed var(--jw-red);
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 0.85rem;
-    color: #fca5a5;
-    margin-bottom: 24px;
-}
-.btn-admin-emergency {
-    background: transparent;
-    border: 1px solid #475569;
-    color: #94a3b8;
-    padding: 10px 18px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
+    updateStatusPanel();
+    renderSectorCards();
+    updateMissionPanel();
 }
 
-/* レスポンシブ */
-@media (max-width: 768px) {
-    .dashboard-grid { grid-template-columns: 1fr; gap: 14px; padding: 16px; }
-    .sectors-row { grid-template-columns: repeat(2, 1fr); padding: 0 16px 14px; }
-    .bottom-action-bar { padding: 12px 16px; }
-    .btn-step-nav { padding: 10px 14px; font-size: 0.8rem; }
-    .btn-main-action { font-size: 1rem; padding: 12px 16px; }
+function updateStatusPanel() {
+    const clearedCount = clearedList.length;
+    document.getElementById("statClearedSectors").innerText = `${clearedCount} / ${SECTOR_POOLS.length - 1}`;
+    document.getElementById("statClues").innerText = `${clearedCount * 2} / 8`;
+}
+
+function updateMissionPanel() {
+    const curQ = getCurrentQuestion(currentSectorId);
+    const isCleared = clearedList.includes(currentSectorId);
+    const isFinal = (currentSectorId === SECTOR_POOLS.length - 1);
+    const maxUnlocked = clearedList.length;
+
+    document.getElementById("currentSectorHighlight").innerText = curQ.name;
+    document.getElementById("currentSectorInstructions").innerText = curQ.instructions;
+
+    const btnAction = document.getElementById("btnMainAction");
+    const btnPrev = document.getElementById("btnPrevSector");
+    const btnNext = document.getElementById("btnNextSector");
+
+    // 前へ/次へボタンの有効無効
+    btnPrev.disabled = (currentSectorId === 0);
+    btnNext.disabled = (currentSectorId >= maxUnlocked || currentSectorId >= SECTOR_POOLS.length - 1);
+
+    // メインボタンの表示
+    if (isCleared) {
+        if (currentSectorId < maxUnlocked && currentSectorId < SECTOR_POOLS.length - 1) {
+            btnAction.innerText = `「${SECTOR_POOLS[currentSectorId + 1].name}」へ進む ➔`;
+        } else if (isFinal) {
+            btnAction.innerText = "🎉 全調査完了！ (本部へ)";
+        } else {
+            btnAction.innerText = "調査済みレポートを確認 →";
+        }
+    } else {
+        btnAction.innerText = isFinal ? "最終ミッションに挑む ➔" : "クイズに挑戦する ➔";
+    }
+}
+
+function renderSectorCards() {
+    const row = document.getElementById("sectorsRow");
+    row.innerHTML = "";
+    const maxUnlocked = clearedList.length;
+
+    for (let i = 0; i < 4; i++) {
+        const sec = SECTOR_POOLS[i];
+        const isCleared = clearedList.includes(sec.id);
+        const isActive = (sec.id === currentSectorId);
+        const isUnlocked = (i <= maxUnlocked);
+
+        const card = document.createElement("div");
+        card.className = `sector-card ${isActive ? 'active' : ''} ${isCleared ? 'cleared' : ''} ${!isUnlocked ? 'locked' : ''}`;
+
+        let iconDisplay = isCleared ? "✓" : (isUnlocked ? sec.icon : "🔒");
+
+        card.innerHTML = `
+            <div class="card-title">${sec.name}</div>
+            <div class="card-subtitle">${sec.areaName}</div>
+            <div class="card-icon">${iconDisplay}</div>
+        `;
+
+        if (isUnlocked) {
+            card.onclick = () => {
+                currentSectorId = sec.id;
+                localStorage.setItem("jw_current_id", currentSectorId);
+                renderSectorCards();
+                updateMissionPanel();
+            };
+        }
+
+        row.appendChild(card);
+    }
+}
+
+// ◀ 前の区画へ
+function prevSectorStep() {
+    if (currentSectorId > 0) {
+        currentSectorId--;
+        localStorage.setItem("jw_current_id", currentSectorId);
+        initDashboard();
+    }
+}
+
+// 次の区画へ ▶
+function nextSectorStep() {
+    const maxUnlocked = clearedList.length;
+    if (currentSectorId < maxUnlocked && currentSectorId < SECTOR_POOLS.length - 1) {
+        currentSectorId++;
+        localStorage.setItem("jw_current_id", currentSectorId);
+        initDashboard();
+    }
+}
+
+// メインアクションボタンの挙動
+function handleMainAction() {
+    const isCleared = clearedList.includes(currentSectorId);
+    const maxUnlocked = clearedList.length;
+
+    // クリア済みで、まだ次の区画に進んでいない場合は次へ送る
+    if (isCleared && currentSectorId < maxUnlocked && currentSectorId < SECTOR_POOLS.length - 1) {
+        nextSectorStep();
+    } else {
+        openQuizModal();
+    }
+}
+
+/* ==========================================================
+   クイズ挑戦モーダル
+========================================================== */
+function openQuizModal() {
+    const curQ = getCurrentQuestion(currentSectorId);
+    const isCleared = clearedList.includes(curQ.id);
+
+    document.getElementById("modalQuizTitle").innerText = `${curQ.name}：${curQ.areaName}`;
+    document.getElementById("modalQuizQuestion").innerText = curQ.question;
+    document.getElementById("modalQuizHint").innerText = curQ.hint;
+    document.getElementById("modalQuizExplanation").innerText = curQ.explanation;
+
+    const inputArea = document.getElementById("quizInputArea");
+    const expDetails = document.getElementById("modalQuizExplanationDetails");
+    const errAlert = document.getElementById("quizErrorAlert");
+
+    errAlert.style.display = "none";
+
+    if (isCleared) {
+        inputArea.style.display = "none";
+        expDetails.style.display = "block";
+    } else {
+        inputArea.style.display = "block";
+        expDetails.style.display = "none";
+        document.getElementById("quizAnswerInput").value = "";
+    }
+
+    document.getElementById("quizModal").style.setProperty("display", "flex", "important");
+
+    if (!isCleared) {
+        document.getElementById("quizAnswerInput").focus();
+        document.getElementById("quizAnswerInput").onkeypress = (e) => {
+            if (e.key === "Enter") submitAnswer();
+        };
+    }
+}
+
+function closeQuizModal() {
+    document.getElementById("quizModal").style.setProperty("display", "none", "important");
+}
+
+function submitAnswer() {
+    const input = document.getElementById("quizAnswerInput");
+    const errorAlert = document.getElementById("quizErrorAlert");
+    if (!input) return;
+
+    const userVal = normalizeText(input.value);
+    const curQ = getCurrentQuestion(currentSectorId);
+
+    const isMatch = curQ.answers.some(ans => normalizeText(ans) === userVal);
+
+    if (isMatch) {
+        errorAlert.style.display = "none";
+        if (!clearedList.includes(curQ.id)) {
+            clearedList.push(curQ.id);
+            localStorage.setItem("jw_cleared_list", JSON.stringify(clearedList));
+        }
+        closeQuizModal();
+        showClearModal(curQ);
+    } else {
+        errorAlert.style.display = "block";
+    }
+}
+
+function showClearModal(curQ) {
+    const modal = document.getElementById("clearModal");
+    const title = document.getElementById("clearModalTitle");
+    const desc = document.getElementById("clearModalDesc");
+    const btn = document.getElementById("clearModalBtn");
+
+    const isFinal = (curQ.id === SECTOR_POOLS.length - 1);
+
+    if (isFinal) {
+        title.innerText = "🦖 MISSION COMPLETE!";
+        title.style.color = "var(--jw-amber)";
+        desc.innerText = `チーム【${teamName}】の皆さん、お見事です！\n全区画のセキュリティ再起動に成功しました。\n\n端末を持ったまま【本部受付】へ向かい、クリアの証を受け取ってください！`;
+        btn.innerText = "調査完了画面へ";
+    } else {
+        title.innerText = "ACCESS GRANTED";
+        title.style.color = "var(--jw-green)";
+        const nextQ = getCurrentQuestion(curQ.id + 1);
+        desc.innerText = `【${curQ.name}】の調査データを承認しました！\n\n次の区画のアクセス制限が解除されました。\n\n${nextQ.instructions}`;
+        btn.innerText = `「${nextQ.name}」へ進む ➔`;
+    }
+
+    modal.style.setProperty("display", "flex", "important");
+}
+
+function nextFromClearModal() {
+    document.getElementById("clearModal").style.setProperty("display", "none", "important");
+    if (currentSectorId < SECTOR_POOLS.length - 1) {
+        currentSectorId++;
+        localStorage.setItem("jw_current_id", currentSectorId);
+    }
+    initDashboard();
+}
+
+/* ==========================================================
+   遊び方・注意事項モーダル
+========================================================== */
+function openInfoModal(type) {
+    const modal = document.getElementById("infoModal");
+    const title = document.getElementById("infoModalTitle");
+    const body = document.getElementById("infoModalBody");
+
+    if (type === "howTo") {
+        title.innerText = "📖 遊び方";
+        body.innerHTML = `
+            <p>1. 画面の指示書に従って各区画（教室や展示エリア）へ移動します。</p>
+            <p>2. 現地に隠された暗号や展示パネルの手がかりを探します。</p>
+            <p>3. 「クイズに挑戦する」から答えを入力し、正解すると次の区画が解放されます。</p>
+            <p>4. 最後のFINAL区画をクリアして本部受付へ向かいましょう！</p>
+        `;
+    } else {
+        title.innerText = "❓ 注意事項";
+        body.innerHTML = `
+            <p>・調査端末（タブレット）は大切に扱ってください。</p>
+            <p>・他のタブを開いたり画面を閉じると、セキュリティロックが発動します。</p>
+            <p>・走ったり大声を出すなど、他クラスの迷惑になる行為は控えましょう。</p>
+            <p>・困ったときは近くのスタッフに声をかけてください。</p>
+        `;
+    }
+
+    modal.style.setProperty("display", "flex", "important");
+}
+
+function closeInfoModal() {
+    document.getElementById("infoModal").style.setProperty("display", "none", "important");
+}
+
+/* ==========================================================
+   管理者認証操作
+========================================================== */
+function openAdminModal() {
+    const modal = document.getElementById("adminModalLayer");
+    document.getElementById("adminPasswordInput").value = "";
+    document.getElementById("adminErrorMsg").style.display = "none";
+    modal.style.setProperty("display", "flex", "important");
+    setTimeout(() => document.getElementById("adminPasswordInput").focus(), 100);
+}
+
+function closeAdminModal() {
+    document.getElementById("adminModalLayer").style.setProperty("display", "none", "important");
+}
+
+function verifyAdmin(actionType) {
+    const pass = document.getElementById("adminPasswordInput").value;
+    const errorMsg = document.getElementById("adminErrorMsg");
+
+    if (pass === ADMIN_PASSWORD) {
+        closeAdminModal();
+
+        if (actionType === "resume") {
+            isViolationLocked = false;
+            localStorage.removeItem("jw_violation_locked");
+            document.getElementById("securityLockScreen").style.setProperty("display", "none", "important");
+            enterFullscreen();
+        } else if (actionType === "reset") {
+            exitFullscreen();
+            localStorage.clear();
+            teamName = "";
+            clearedList = [];
+            currentSectorId = 0;
+            assignedPatterns = {};
+            isViolationLocked = false;
+            document.getElementById("securityLockScreen").style.setProperty("display", "none", "important");
+            showTeamSetupModal();
+        }
+    } else {
+        errorMsg.style.display = "block";
+    }
 }
